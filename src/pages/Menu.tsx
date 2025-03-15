@@ -2,292 +2,283 @@
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { useOrderMode } from '@/contexts/OrderModeContext';
-import { TabsList, TabsTrigger, Tabs, TabsContent } from '@/components/ui/tabs';
-import { Flame, Search, UtensilsCrossed, Truck, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Flame, Filter, X } from 'lucide-react';
+import LocationSelector from '@/components/LocationSelector';
 
-// Menu data
-const menuCategories = [
+// Menu categories
+const categories = [
   "All",
-  "Appetizers",
+  "Starters",
   "Main Course",
   "Breads",
-  "Rice",
+  "Rice & Biryani",
+  "Sides",
   "Desserts",
   "Beverages"
 ];
 
+// Menu items
 const menuItems = [
   {
     id: 1,
     name: "Butter Chicken",
     description: "Tender chicken in a rich, creamy tomato sauce with butter and mild spices.",
-    price: 320,
-    category: "Main Course",
+    price: "₹320",
+    takeawayPrice: "₹290",
     image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: true,
-    isVegetarian: false,
-    isSpicy: false
+    popular: true,
+    category: "Main Course",
+    veg: false
   },
   {
     id: 2,
     name: "Paneer Tikka",
     description: "Marinated cottage cheese chunks, grilled to perfection with bell peppers and onions.",
-    price: 280,
-    category: "Appetizers",
+    price: "₹280",
+    takeawayPrice: "₹250",
     image: "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: true,
-    isVegetarian: true,
-    isSpicy: false
+    popular: true,
+    category: "Starters",
+    veg: true
   },
   {
     id: 3,
-    name: "Chicken Biryani",
-    description: "Fragrant basmati rice cooked with tender chicken pieces and aromatic spices.",
-    price: 320,
-    category: "Rice",
-    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: true,
-    isVegetarian: false,
-    isSpicy: true
+    name: "Vegetable Biryani",
+    description: "Fragrant basmati rice cooked with mixed vegetables and aromatic spices.",
+    price: "₹250",
+    takeawayPrice: "₹225",
+    image: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    popular: false,
+    category: "Rice & Biryani",
+    veg: true
   },
   {
     id: 4,
-    name: "Vegetable Biryani",
-    description: "Fragrant basmati rice cooked with mixed vegetables and aromatic spices.",
-    price: 250,
-    category: "Rice",
-    image: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: false,
-    isVegetarian: true,
-    isSpicy: false
+    name: "Garlic Naan",
+    description: "Soft, leavened bread topped with garlic and butter, baked in tandoor.",
+    price: "₹60",
+    takeawayPrice: "₹55",
+    image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    popular: false,
+    category: "Breads",
+    veg: true
   },
   {
     id: 5,
-    name: "Garlic Naan",
-    description: "Soft, leavened bread topped with garlic and butter, baked in tandoor.",
-    price: 60,
-    category: "Breads",
-    image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: false,
-    isVegetarian: true,
-    isSpicy: false
+    name: "Chicken Tikka",
+    description: "Boneless chicken pieces marinated in spices and yogurt, grilled in a tandoor.",
+    price: "₹300",
+    takeawayPrice: "₹270",
+    image: "https://images.unsplash.com/photo-1535239306866-0b2898eec4c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    popular: true,
+    category: "Starters",
+    veg: false
   },
   {
     id: 6,
-    name: "Chicken Tikka",
-    description: "Boneless chicken pieces marinated in yogurt and spices, grilled to perfection.",
-    price: 300,
-    category: "Appetizers",
-    image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: true,
-    isVegetarian: false,
-    isSpicy: true
+    name: "Dal Makhani",
+    description: "Black lentils and kidney beans slow-cooked with cream, butter, and spices.",
+    price: "₹220",
+    takeawayPrice: "₹200",
+    image: "https://images.unsplash.com/photo-1631292784640-738e0d16e133?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    popular: false,
+    category: "Main Course",
+    veg: true
   },
   {
     id: 7,
-    name: "Dal Makhani",
-    description: "Black lentils slow-cooked with kidney beans, butter, and cream.",
-    price: 220,
-    category: "Main Course",
-    image: "https://images.unsplash.com/photo-1616687335458-a877a301dea2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: false,
-    isVegetarian: true,
-    isSpicy: false
+    name: "Gulab Jamun",
+    description: "Soft, spongy milk-solid balls soaked in rose-flavored sugar syrup.",
+    price: "₹120",
+    takeawayPrice: "₹110",
+    image: "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    popular: false,
+    category: "Desserts",
+    veg: true
   },
   {
     id: 8,
-    name: "Gulab Jamun",
-    description: "Soft, spongy milk-solid balls soaked in rose-flavored sugar syrup.",
-    price: 120,
-    category: "Desserts",
-    image: "https://images.unsplash.com/photo-1605196560547-1f6bd3c76c12?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: false,
-    isVegetarian: true,
-    isSpicy: false
+    name: "Mango Lassi",
+    description: "Refreshing yogurt-based drink blended with fresh mango and a hint of cardamom.",
+    price: "₹100",
+    takeawayPrice: "₹90",
+    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    popular: false,
+    category: "Beverages",
+    veg: true
   },
   {
     id: 9,
-    name: "Mango Lassi",
-    description: "A refreshing yogurt-based drink blended with sweet mango pulp and cardamom.",
-    price: 120,
-    category: "Beverages",
-    image: "https://images.unsplash.com/photo-1626263468007-a15a319edd60?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: true,
-    isVegetarian: true,
-    isSpicy: false
+    name: "Chicken Biryani",
+    description: "Fragrant basmati rice layered with marinated chicken, fried onions, and aromatic spices.",
+    price: "₹330",
+    takeawayPrice: "₹300",
+    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    popular: true,
+    category: "Rice & Biryani",
+    veg: false
   },
   {
     id: 10,
-    name: "Chicken Korma",
-    description: "Tender chicken pieces in a rich, creamy sauce with cashews and aromatic spices.",
-    price: 340,
+    name: "Palak Paneer",
+    description: "Cottage cheese cubes in a creamy spinach gravy flavored with spices.",
+    price: "₹260",
+    takeawayPrice: "₹235",
+    image: "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    popular: false,
     category: "Main Course",
-    image: "https://images.unsplash.com/photo-1505253758473-96b7015fcd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    isPopular: false,
-    isVegetarian: false,
-    isSpicy: false
+    veg: true
   }
 ];
 
 const Menu = () => {
   const { mode } = useOrderMode();
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [showVegOnly, setShowVegOnly] = useState(false);
+  const [showPopularOnly, setShowPopularOnly] = useState(false);
   
+  // Filter menu items based on selected filters
   const filteredItems = menuItems.filter(item => {
-    // Filter by category
-    if (activeCategory !== "All" && item.category !== activeCategory) {
+    // Category filter
+    if (selectedCategory !== "All" && item.category !== selectedCategory) {
       return false;
     }
     
-    // Filter by search query
-    if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
-        !item.description.toLowerCase().includes(searchQuery.toLowerCase())) {
+    // Veg-only filter
+    if (showVegOnly && !item.veg) {
+      return false;
+    }
+    
+    // Popular-only filter
+    if (showPopularOnly && !item.popular) {
       return false;
     }
     
     return true;
   });
   
+  const resetFilters = () => {
+    setSelectedCategory("All");
+    setShowVegOnly(false);
+    setShowPopularOnly(false);
+  };
+  
   return (
     <Layout>
-      <div className="pt-28 pb-16 bg-secondary/30">
-        <div className="container mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
+      <section className="pt-32 pb-16 px-6">
+        <div className="container mx-auto">
+          <div className="text-center mb-12 smooth-appear">
             <span className="inline-block px-3 py-1 bg-accent text-accent-foreground rounded-full text-xs font-medium">
-              {mode === 'delivery' ? 'Delivery Menu' : 'Takeaway Menu'}
+              {mode === 'delivery' ? 'Available for Delivery' : 'Available for Takeaway'}
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold">Our Menu</h1>
-            <p className="text-lg text-muted-foreground">
-              {mode === 'delivery' 
-                ? 'Explore our complete menu available for delivery through Zomato.'
-                : 'Explore our complete menu available for takeaway orders.'}
+            <h1 className="text-4xl md:text-5xl font-bold mt-4 mb-6 font-brand">
+              Our <span className="brand-text-gradient">Menu</span>
+            </h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Explore our selection of authentic Indian dishes prepared with love and traditional recipes.
+              {mode === 'takeaway' && " Enjoy 10% off on all takeaway orders!"}
             </p>
-            <div className="flex items-center justify-center gap-2 pt-3">
-              {mode === 'delivery' ? (
-                <div className="flex items-center gap-2 text-sm">
-                  <Truck size={16} className="text-primary" />
-                  <span>Delivered by Zomato</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-sm">
-                  <UtensilsCrossed size={16} className="text-primary" />
-                  <span>Available for pickup</span>
-                </div>
-              )}
-            </div>
           </div>
           
-          <div className="glass-morphism rounded-xl p-4 md:p-6 mb-8">
-            <div className="flex flex-col md:flex-row gap-4 justify-between">
-              <div className="relative w-full md:w-64">
-                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search menu items..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white border border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          <div className="flex justify-center mb-8 smooth-appear" style={{ animationDelay: '0.2s' }}>
+            <LocationSelector />
+          </div>
+          
+          <div className="mb-8 smooth-appear" style={{ animationDelay: '0.3s' }}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      selectedCategory === category
+                        ? 'bg-primary text-white'
+                        : 'bg-muted hover:bg-muted/80 text-foreground/80'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
               </div>
               
-              <div className="overflow-x-auto pb-2">
-                <Tabs defaultValue="All" className="w-full">
-                  <TabsList className="p-1 bg-secondary/80 rounded-lg">
-                    {menuCategories.map((category) => (
-                      <TabsTrigger
-                        key={category}
-                        value={category}
-                        onClick={() => setActiveCategory(category)}
-                        className="px-4 py-2 text-sm whitespace-nowrap"
-                      >
-                        {category}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="veg-only"
+                    checked={showVegOnly}
+                    onChange={() => setShowVegOnly(!showVegOnly)}
+                    className="rounded border-muted-foreground h-4 w-4 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="veg-only" className="text-sm">Veg Only</label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="popular-only"
+                    checked={showPopularOnly}
+                    onChange={() => setShowPopularOnly(!showPopularOnly)}
+                    className="rounded border-muted-foreground h-4 w-4 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="popular-only" className="text-sm">Popular Items</label>
+                </div>
+                
+                {(selectedCategory !== "All" || showVegOnly || showPopularOnly) && (
+                  <button
+                    onClick={resetFilters}
+                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    <X size={14} />
+                    Reset
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-          
-          {mode === 'delivery' && (
-            <div className="bg-restaurant-50 rounded-xl p-4 mb-8 flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <img src="https://b.zmtcdn.com/images/logo/zomato_logo_2017.png" alt="Zomato" className="h-6" />
-                <p className="text-sm">Order directly from our <span className="font-medium">Zomato page</span> for fastest delivery</p>
-              </div>
-              <a 
-                href="https://www.zomato.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:brightness-105"
-              >
-                Order via Zomato
-                <ExternalLink size={14} />
-              </a>
-            </div>
-          )}
-          
-          {filteredItems.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">No menu items found. Try a different search or category.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredItems.map((item) => (
                 <div 
                   key={item.id} 
-                  className="flex flex-col sm:flex-row gap-4 glass-morphism rounded-xl overflow-hidden hover-lift"
+                  className="glass-morphism rounded-xl overflow-hidden hover-lift"
                 >
-                  <div className="sm:w-1/3 aspect-[4/3] relative">
+                  <div className="h-48 relative">
                     <img 
                       src={item.image} 
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
-                      {item.isPopular && (
-                        <span className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium">
-                          <Flame size={12} />
-                          Popular
-                        </span>
-                      )}
-                      {item.isVegetarian && (
-                        <span className="flex items-center px-2 py-1 bg-green-500 text-white rounded-full text-xs font-medium">
-                          Veg
-                        </span>
-                      )}
-                      {item.isSpicy && (
-                        <span className="flex items-center px-2 py-1 bg-red-500 text-white rounded-full text-xs font-medium">
-                          Spicy
-                        </span>
-                      )}
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent py-3 px-4 sm:hidden">
-                      <p className="text-white font-medium">{item.name}</p>
+                    {item.popular && (
+                      <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium">
+                        <Flame size={12} />
+                        Popular
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-background/70 backdrop-blur-sm rounded-full text-xs font-medium">
+                      {item.veg ? '🟢 Veg' : '🔴 Non-Veg'}
                     </div>
                   </div>
                   
-                  <div className="p-4 flex-1 flex flex-col">
-                    <div className="flex-1">
-                      <div className="hidden sm:block">
-                        <span className="text-xs text-muted-foreground">{item.category}</span>
-                        <h3 className="text-lg font-medium mb-1">{item.name}</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
-                    </div>
-                    
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="font-semibold">₹{item.price}</p>
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg font-medium">{item.name}</h3>
+                      <div className="text-right">
+                        <p className="font-semibold">
+                          {mode === 'delivery' ? item.price : item.takeawayPrice}
+                        </p>
                         {mode === 'takeaway' && (
-                          <p className="text-xs text-primary font-medium">
-                            ₹{Math.round(item.price * 0.9)} for takeaway
+                          <p className="text-xs text-muted-foreground line-through">
+                            {item.price}
                           </p>
                         )}
                       </div>
-                      
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">{item.category}</span>
                       {mode === 'delivery' ? (
                         <a 
                           href="https://www.zomato.com" 
@@ -302,7 +293,7 @@ const Menu = () => {
                           href="tel:+911234567890"
                           className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:brightness-105"
                         >
-                          Order
+                          Call to Order
                         </a>
                       )}
                     </div>
@@ -310,9 +301,21 @@ const Menu = () => {
                 </div>
               ))}
             </div>
-          )}
+            
+            {filteredItems.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No items match your filters. Please try different criteria.</p>
+                <button
+                  onClick={resetFilters}
+                  className="mt-4 px-4 py-2 bg-secondary text-secondary-foreground rounded-full text-sm font-medium"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </section>
     </Layout>
   );
 };
