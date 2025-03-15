@@ -22,6 +22,7 @@ export default {
 			fontFamily: {
 				sans: ['SF Pro Display', 'system-ui', 'sans-serif'],
 				serif: ['Garamond', 'serif'],
+				brand: ['"Playfair Display"', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -70,6 +71,12 @@ export default {
           			900: '#804000',
           			950: '#4D2600',
         		},
+				saawariya: {
+					red: '#E63A2E',
+					yellow: '#FFCC00',
+					darkred: '#B02A1A',
+					lightyellow: '#FFE066',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

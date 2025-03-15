@@ -48,8 +48,8 @@ const Header = () => {
       className={cn(
         'fixed top-0 left-0 right-0 z-50 px-6 transition-all duration-300 ease-in-out',
         isScrolled 
-          ? 'py-3 glass-morphism border-b border-white/10' 
-          : 'py-6 bg-transparent'
+          ? 'py-2 glass-morphism border-b border-white/10' 
+          : 'py-4 bg-transparent'
       )}
     >
       <div className="container mx-auto">
@@ -65,8 +65,8 @@ const Header = () => {
                 className={({ isActive }) => cn(
                   'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200',
                   isActive 
-                    ? 'text-primary-foreground bg-primary' 
-                    : 'text-foreground/80 hover:text-foreground hover:bg-secondary'
+                    ? 'text-white bg-saawariya-red' 
+                    : 'text-foreground/80 hover:text-foreground hover:bg-secondary/50'
                 )}
               >
                 {link.name}
@@ -81,7 +81,7 @@ const Header = () => {
               href="https://www.zomato.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full font-medium text-sm transition-all hover:brightness-105 hover-lift"
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-saawariya-red text-white rounded-full font-medium text-sm transition-all hover:brightness-105 hover-lift"
             >
               <ShoppingBag size={16} />
               <span>Order Now</span>
@@ -116,8 +116,8 @@ const Header = () => {
               className={({ isActive }) => cn(
                 'px-8 py-3 rounded-full text-lg font-medium transition-all w-full text-center',
                 isActive 
-                  ? 'text-primary-foreground bg-primary' 
-                  : 'text-foreground/80 hover:text-foreground hover:bg-secondary'
+                  ? 'text-white bg-saawariya-red' 
+                  : 'text-foreground/80 hover:text-foreground hover:bg-secondary/30'
               )}
             >
               {link.name}
@@ -128,7 +128,7 @@ const Header = () => {
             href="https://www.zomato.com" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-full font-medium w-full mt-4 hover:brightness-105"
+            className="flex items-center justify-center gap-2 px-8 py-3 bg-saawariya-red text-white rounded-full font-medium w-full mt-4 hover:brightness-105"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <ShoppingBag size={18} />

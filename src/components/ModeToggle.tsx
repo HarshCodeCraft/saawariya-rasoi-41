@@ -8,13 +8,13 @@ const ModeToggle = () => {
   const { mode, setMode } = useOrderMode();
 
   return (
-    <div className="flex items-center p-1 bg-secondary rounded-full">
+    <div className="flex items-center p-1 bg-secondary/20 rounded-full border border-secondary">
       <button
         onClick={() => setMode('delivery')}
         className={cn(
           'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300',
           mode === 'delivery'
-            ? 'bg-white text-foreground shadow-sm'
+            ? 'bg-saawariya-red text-white shadow-sm' 
             : 'text-muted-foreground hover:text-foreground'
         )}
       >
@@ -26,7 +26,7 @@ const ModeToggle = () => {
         className={cn(
           'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300',
           mode === 'takeaway'
-            ? 'bg-white text-foreground shadow-sm'
+            ? 'bg-saawariya-red text-white shadow-sm' 
             : 'text-muted-foreground hover:text-foreground'
         )}
       >

@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,24 +16,24 @@
     --popover: 0 0% 100%;
     --popover-foreground: 20 10% 5%;
 
-    --primary: 24 100% 60%;
+    --primary: 5 84% 54%; /* Saawariya Red */
     --primary-foreground: 60 9% 98%;
 
-    --secondary: 60 5% 96%;
-    --secondary-foreground: 24 10% 10%;
+    --secondary: 48 100% 50%; /* Saawariya Yellow */
+    --secondary-foreground: 5 84% 30%;
 
     --muted: 60 5% 96%;
     --muted-foreground: 25 5% 45%;
 
-    --accent: 24 100% 95%;
-    --accent-foreground: 24 80% 40%;
+    --accent: 48 100% 75%;
+    --accent-foreground: 5 84% 30%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 60 9% 98%;
 
     --border: 20 10% 90%;
     --input: 20 10% 90%;
-    --ring: 24 100% 60%;
+    --ring: 5 84% 54%;
 
     --radius: 0.75rem;
 
@@ -88,6 +90,14 @@
   .hover-lift:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+
+  .brand-gradient {
+    @apply bg-gradient-to-r from-saawariya-red to-saawariya-darkred;
+  }
+
+  .brand-text-gradient {
+    @apply bg-gradient-to-r from-saawariya-red to-saawariya-darkred bg-clip-text text-transparent;
   }
 }
 
