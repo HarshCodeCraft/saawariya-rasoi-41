@@ -16,7 +16,7 @@ const Hero = () => {
         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
           <div className="md:w-1/2 space-y-6 smooth-appear">
             <span className="inline-block px-3 py-1 bg-accent text-accent-foreground rounded-full text-xs font-medium">
-              {mode === 'delivery' ? 'Delivered via Zomato' : 'Fresh Takeaway'}
+              {mode === 'delivery' ? 'Delivered via Zomato' : 'Fresh Takeaway in Kanpur'}
             </span>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
@@ -25,7 +25,7 @@ const Hero = () => {
             </h1>
             
             <p className="text-lg text-muted-foreground">
-              Experience the rich flavors and aromatic spices of traditional Indian cuisine, 
+              Experience the rich flavors and aromatic spices of traditional Indian cuisine from Kanpur, 
               {mode === 'delivery' 
                 ? ' delivered fresh to your doorstep through Zomato.' 
                 : ' available for convenient takeaway.'}
@@ -34,7 +34,7 @@ const Hero = () => {
             <div className="flex flex-wrap gap-4 pt-2">
               {mode === 'delivery' ? (
                 <a 
-                  href="https://www.zomato.com" 
+                  href="https://link.zomato.com/xqzv/rshare?id=75078797305635b1" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:brightness-105 hover-lift"
@@ -95,20 +95,6 @@ const Hero = () => {
                   alt="Saawariya Rasoi signature dish" 
                   className="w-full h-full object-cover"
                 />
-              </div>
-              <div className="absolute -bottom-6 -right-6 w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-background neo-shadow">
-                <img 
-                  src="https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" 
-                  alt="Chef's special" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute top-4 -left-10 md:-left-16 glass-morphism rounded-lg p-3 neo-shadow">
-                <p className="text-xs text-muted-foreground">Top Rated</p>
-                <p className="font-medium">Butter Chicken</p>
-              </div>
-              <div className="absolute bottom-1/3 -left-8 md:-left-12 glass-morphism rounded-full h-16 w-16 flex items-center justify-center neo-shadow">
-                <span className="font-bold text-primary">20%</span>
               </div>
             </div>
           </div>

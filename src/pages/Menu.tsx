@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { useOrderMode } from '@/contexts/OrderModeContext';
@@ -67,11 +66,9 @@ const Menu = () => {
               Explore our authentic dishes from Purwanchal, prepared with traditional recipes.
               {mode === 'takeaway' && " Enjoy 10% off on all takeaway orders!"}
             </p>
-            {mode === 'takeaway' && (
-              <p className="text-sm mt-2 text-primary font-medium">
-                Located in Kanpur, Uttar-Pradesh, India
-              </p>
-            )}
+            <p className="text-sm mt-2 text-primary font-medium">
+              Located in Kanpur, Uttar-Pradesh, India
+            </p>
           </div>
           
           <div className="mb-8 smooth-appear" style={{ animationDelay: '0.3s' }}>
