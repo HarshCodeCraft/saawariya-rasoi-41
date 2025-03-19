@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { sendBulkOrderNotification } from '@/utils/notification';
+import PickupLocationMap from './PickupLocationMap';
 
 // Form validation schema
 const formSchema = z.object({
@@ -41,6 +42,8 @@ interface BulkOrderFormProps {
 
 const BulkOrderForm = ({ item, onClose }: BulkOrderFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
   
   // Initialize form with default values
   const form = useForm<FormValues>({
@@ -58,34 +61,44 @@ const BulkOrderForm = ({ item, onClose }: BulkOrderFormProps) => {
     },
   });
   
+  const handleProceedToConfirmation = (data: FormValues) => {
+    // Calculate total price
+    const itemPrice = item.takeawayPrice || item.price;
+    const numericPrice = parseFloat(itemPrice.replace('₹', '').replace(',', ''));
+    const totalPrice = numericPrice * data.quantity;
+    
+    // Format order details for confirmation and notification
+    const details = {
+      orderId: `ORDER-${Math.floor(Math.random() * 10000)}`,
+      customerName: data.name,
+      customerEmail: data.email,
+      customerPhone: data.phone,
+      pickupLocation: data.pickupAddress || 'Saawariya Rasoi, Kanpur',
+      pickupDateTime: `${format(data.pickupDate, 'PP')} at ${data.pickupTime}`,
+      items: [{
+        name: item.name,
+        quantity: data.quantity,
+        price: itemPrice
+      }],
+      totalAmount: `₹${totalPrice.toFixed(2)}`,
+      paymentStatus: data.paymentMethod === 'cash' ? 'Cash on Pickup' : 'Online Payment',
+      specialInstructions: data.specialInstructions || 'None',
+    };
+    
+    setOrderDetails(details);
+    setShowConfirmation(true);
+  };
+  
   const onSubmit = async (data: FormValues) => {
+    if (!showConfirmation) {
+      handleProceedToConfirmation(data);
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Calculate total price
-      const itemPrice = item.takeawayPrice || item.price;
-      const numericPrice = parseFloat(itemPrice.replace('₹', '').replace(',', ''));
-      const totalPrice = numericPrice * data.quantity;
-      
-      // Format order details for notification
-      const orderDetails = {
-        orderId: `ORDER-${Math.floor(Math.random() * 10000)}`,
-        customerName: data.name,
-        customerEmail: data.email,
-        customerPhone: data.phone,
-        pickupLocation: data.pickupAddress || 'Saawariya Rasoi, Kanpur',
-        pickupDateTime: `${format(data.pickupDate, 'PP')} at ${data.pickupTime}`,
-        items: [{
-          name: item.name,
-          quantity: data.quantity,
-          price: itemPrice
-        }],
-        totalAmount: `₹${totalPrice.toFixed(2)}`,
-        paymentStatus: data.paymentMethod === 'cash' ? 'Cash on Pickup' : 'Paid',
-        specialInstructions: data.specialInstructions || 'None',
-      };
-      
-      // Send notifications
+      // Send notifications using the orderDetails that was set
       await sendBulkOrderNotification(orderDetails);
       
       toast({
@@ -105,6 +118,82 @@ const BulkOrderForm = ({ item, onClose }: BulkOrderFormProps) => {
       setIsSubmitting(false);
     }
   };
+  
+  if (showConfirmation && orderDetails) {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium">Order Confirmation</h3>
+        
+        <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Name</p>
+              <p className="font-medium">{orderDetails.customerName}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Phone</p>
+              <p className="font-medium">{orderDetails.customerPhone}</p>
+            </div>
+          </div>
+          
+          <div>
+            <p className="text-sm text-muted-foreground">Email</p>
+            <p className="font-medium">{orderDetails.customerEmail}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm text-muted-foreground">Pickup Date & Time</p>
+            <p className="font-medium">{orderDetails.pickupDateTime}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm text-muted-foreground">Items</p>
+            {orderDetails.items.map((item: any, index: number) => (
+              <div key={index} className="flex justify-between">
+                <p>{item.name} x {item.quantity}</p>
+                <p>{item.price}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex justify-between pt-2 border-t">
+            <p className="font-medium">Total Amount</p>
+            <p className="font-medium">{orderDetails.totalAmount}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm text-muted-foreground">Payment Method</p>
+            <p className="font-medium">{orderDetails.paymentStatus}</p>
+          </div>
+          
+          {orderDetails.specialInstructions !== 'None' && (
+            <div>
+              <p className="text-sm text-muted-foreground">Special Instructions</p>
+              <p className="text-sm">{orderDetails.specialInstructions}</p>
+            </div>
+          )}
+        </div>
+        
+        <PickupLocationMap address={orderDetails.pickupLocation} />
+        
+        <div className="flex justify-end space-x-4 mt-6">
+          <Button variant="outline" type="button" onClick={() => setShowConfirmation(false)}>
+            Edit Order
+          </Button>
+          <Button type="button" onClick={() => onSubmit(form.getValues())} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Confirm Order'
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <Form {...form}>
@@ -169,6 +258,8 @@ const BulkOrderForm = ({ item, onClose }: BulkOrderFormProps) => {
               </FormItem>
             )}
           />
+          
+          <PickupLocationMap address={form.getValues('pickupAddress') || 'Saawariya Rasoi, Kanpur'} />
         </div>
         
         <div className="space-y-4">
@@ -329,15 +420,8 @@ const BulkOrderForm = ({ item, onClose }: BulkOrderFormProps) => {
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              'Place Bulk Order'
-            )}
+          <Button type="submit">
+            Proceed to Confirmation
           </Button>
         </div>
       </form>

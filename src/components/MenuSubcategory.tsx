@@ -41,9 +41,17 @@ const MenuSubcategory = ({ title, items, zomatoLink }: MenuSubcategoryProps) => 
       setShowBulkForm(true);
     } else {
       // Normal takeaway order
+      const orderId = `ORDER-${Math.floor(Math.random() * 10000)}`;
       toast({
         title: "Order Placed",
-        description: `Your order for ${item.name} has been received. We'll contact you shortly to confirm.`,
+        description: `Your order #${orderId} for ${item.name} has been received. We'll contact you shortly to confirm.`,
+      });
+      
+      // In a real app, this would integrate with authentication and store the order
+      console.log("Normal takeaway order placed:", {
+        item,
+        orderId,
+        timestamp: new Date().toISOString()
       });
     }
   };
