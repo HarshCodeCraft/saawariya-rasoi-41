@@ -3,48 +3,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Flame } from 'lucide-react';
 import { useOrderMode } from '@/contexts/OrderModeContext';
+import { menuItems } from '@/data/menuData';
 
-const menuItems = [
-  {
-    id: 1,
-    name: "Butter Chicken",
-    description: "Tender chicken in a rich, creamy tomato sauce with butter and mild spices.",
-    price: "₹320",
-    image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    popular: true,
-    category: "Main Course"
-  },
-  {
-    id: 2,
-    name: "Paneer Tikka",
-    description: "Marinated cottage cheese chunks, grilled to perfection with bell peppers and onions.",
-    price: "₹280",
-    image: "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    popular: true,
-    category: "Appetizers"
-  },
-  {
-    id: 3,
-    name: "Vegetable Biryani",
-    description: "Fragrant basmati rice cooked with mixed vegetables and aromatic spices.",
-    price: "₹250",
-    image: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    popular: false,
-    category: "Rice"
-  },
-  {
-    id: 4,
-    name: "Garlic Naan",
-    description: "Soft, leavened bread topped with garlic and butter, baked in tandoor.",
-    price: "₹60",
-    image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    popular: false,
-    category: "Breads"
-  }
-];
+// Filter popular items for the featured menu
+const featuredItems = menuItems
+  .filter(item => item.popular)
+  .slice(0, 4); // Show only the first 4 popular items
 
 const FeaturedMenu = () => {
   const { mode } = useOrderMode();
+  const zomatoLink = "https://link.zomato.com/xqzv/rshare?id=75078797305635b1";
   
   return (
     <section className="py-16 bg-secondary/30 px-6 smooth-appear" style={{ animationDelay: '0.4s' }}>
@@ -69,48 +37,49 @@ const FeaturedMenu = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {menuItems.map((item) => (
+          {featuredItems.map((item) => (
             <div 
               key={item.id} 
               className="flex flex-col sm:flex-row gap-4 glass-morphism rounded-xl overflow-hidden hover-lift"
             >
-              <div className="sm:w-1/3 aspect-[4/3] relative">
-                <img 
-                  src={item.image} 
-                  alt={item.name}
-                  className="w-full h-full object-cover"
-                />
-                {item.popular && (
-                  <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium">
-                    <Flame size={12} />
-                    Popular
-                  </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent py-3 px-4 sm:hidden">
-                  <p className="text-white font-medium">{item.name}</p>
-                </div>
-              </div>
-              
               <div className="p-4 flex-1 flex flex-col">
                 <div className="flex-1">
-                  <div className="hidden sm:block">
-                    <span className="text-xs text-muted-foreground">{item.category}</span>
-                    <h3 className="text-lg font-medium mb-1">{item.name}</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
-                </div>
-                
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="font-semibold">{item.price}</p>
-                    {mode === 'takeaway' && (
-                      <p className="text-xs text-primary font-medium">-10% on takeaway</p>
-                    )}
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium mb-1">
+                        {item.name}
+                        {item.quantity && <span className="text-sm text-muted-foreground ml-2">({item.quantity})</span>}
+                      </h3>
+                      <div className="flex items-center gap-1 text-primary text-xs mb-2">
+                        <Flame size={12} />
+                        <span>Popular</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">
+                        {mode === 'delivery' ? item.price : item.takeawayPrice || item.price}
+                      </p>
+                      {mode === 'takeaway' && item.takeawayPrice && (
+                        <p className="text-xs text-muted-foreground line-through">
+                          {item.price}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   
+                  {item.description && (
+                    <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
+                  )}
+                  <span className="text-xs text-muted-foreground">{item.category}</span>
+                  {item.subcategory && (
+                    <span className="text-xs text-muted-foreground"> &bull; {item.subcategory}</span>
+                  )}
+                </div>
+                
+                <div className="flex justify-end mt-4">
                   {mode === 'delivery' ? (
                     <a 
-                      href="https://www.zomato.com" 
+                      href={zomatoLink} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:brightness-105"
