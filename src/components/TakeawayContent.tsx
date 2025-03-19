@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ArrowRight, Phone, Clock } from 'lucide-react';
+import { ArrowRight, Phone, Clock, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const TakeawayContent = () => {
@@ -75,7 +76,7 @@ const TakeawayContent = () => {
         </div>
       </section>
 
-      {/* Bulk Orders */}
+      {/* Bulk Orders - Updated to highlight online ordering */}
       <section className="space-y-6">
         <h3 className="text-xl font-medium">Bulk Order Options</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -101,7 +102,7 @@ const TakeawayContent = () => {
               <ul className="text-sm space-y-2 mb-4">
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-restaurant-500"></span>
-                  24-hour advance booking required
+                  24-hour advance booking recommended
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-restaurant-500"></span>
@@ -114,13 +115,13 @@ const TakeawayContent = () => {
               </ul>
             </div>
             <div className="p-5 pt-0 mt-auto">
-              <a 
-                href="tel:+911234567890" 
-                className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-secondary text-foreground rounded-full font-medium hover:bg-secondary/80 text-sm"
+              <Link 
+                to="/menu" 
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:bg-primary/90 text-sm"
               >
-                <Phone size={14} />
-                Call for Corporate Orders
-              </a>
+                <Users size={14} />
+                Place Bulk Order Online
+              </Link>
             </div>
           </div>
           
@@ -159,13 +160,21 @@ const TakeawayContent = () => {
               </ul>
             </div>
             <div className="p-5 pt-0 mt-auto">
-              <a 
-                href="tel:+911234567890" 
-                className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-secondary text-foreground rounded-full font-medium hover:bg-secondary/80 text-sm"
-              >
-                <Phone size={14} />
-                Call for Party Orders
-              </a>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Link 
+                  to="/menu" 
+                  className="flex items-center justify-center gap-2 flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:bg-primary/90 text-sm"
+                >
+                  Order Online
+                </Link>
+                <a 
+                  href="tel:+911234567890" 
+                  className="flex items-center justify-center gap-2 flex-1 px-4 py-3 bg-secondary text-foreground rounded-full font-medium hover:bg-secondary/80 text-sm"
+                >
+                  <Phone size={14} />
+                  Call Us
+                </a>
+              </div>
             </div>
           </div>
         </div>

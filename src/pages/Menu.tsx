@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useOrderMode } from '@/contexts/OrderModeContext';
 import { Flame, Filter, X, Map } from 'lucide-react';
 import MenuSubcategory from '@/components/MenuSubcategory';
 import SocialLinks from '@/components/SocialLinks';
 import { categories, menuItems } from '@/data/menuData';
+import { toast } from '@/components/ui/use-toast';
 
 const Menu = () => {
   const { mode } = useOrderMode();
@@ -14,6 +15,17 @@ const Menu = () => {
   
   const zomatoLink = "https://link.zomato.com/xqzv/rshare?id=75078797305635b1";
   const googleMapsLink = "https://maps.app.goo.gl/8LbpcKic2gpU9s1p9";
+  
+  useEffect(() => {
+    // Show takeaway bulk order info message
+    if (mode === 'takeaway') {
+      toast({
+        title: "Bulk Orders Available",
+        description: "Need food for an event or party? Select 'Bulk Order' when placing your takeaway order.",
+        duration: 5000,
+      });
+    }
+  }, [mode]);
   
   // Filter menu items based on selected filters
   const filteredItems = menuItems.filter(item => {
@@ -69,6 +81,12 @@ const Menu = () => {
             <p className="text-sm mt-2 text-primary font-medium">
               Located in Kanpur, Uttar-Pradesh, India
             </p>
+            
+            {mode === 'takeaway' && (
+              <div className="mt-4 p-3 bg-primary/10 inline-block rounded-lg text-primary text-sm">
+                <strong>Bulk Orders:</strong> Select "Bulk Order" option when placing your order for events and parties
+              </div>
+            )}
           </div>
           
           <div className="mb-8 smooth-appear" style={{ animationDelay: '0.3s' }}>
@@ -113,7 +131,6 @@ const Menu = () => {
               </div>
             </div>
             
-            {/* Render subcategories if present */}
             {Object.keys(groupedItems).length > 0 ? (
               Object.keys(groupedItems).sort().map((subcategory) => (
                 <MenuSubcategory 

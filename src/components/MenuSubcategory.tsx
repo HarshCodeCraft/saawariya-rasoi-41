@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MenuItem } from '@/data/menuData';
 import { Flame, Info, Clock, Tag, ChevronRight } from 'lucide-react';
 import { useOrderMode } from '@/contexts/OrderModeContext';
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import BulkOrderForm from './BulkOrderForm';
 
 interface MenuSubcategoryProps {
   title: string;
@@ -28,13 +29,28 @@ interface MenuSubcategoryProps {
 const MenuSubcategory = ({ title, items, zomatoLink }: MenuSubcategoryProps) => {
   const { mode } = useOrderMode();
   const navigate = useNavigate();
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [orderType, setOrderType] = useState<'normal' | 'bulk'>('normal');
+  const [showBulkForm, setShowBulkForm] = useState(false);
   
-  const handleTakeawayOrder = (item: MenuItem) => {
-    // When ordering via takeaway, we'll show a dialog to choose between normal or bulk order
-    toast({
-      title: "Order Placed",
-      description: `Your order for ${item.name} has been received. We'll contact you shortly to confirm.`,
-    });
+  const handleTakeawayOrder = (item: MenuItem, type: 'normal' | 'bulk') => {
+    setSelectedItem(item);
+    setOrderType(type);
+    
+    if (type === 'bulk') {
+      setShowBulkForm(true);
+    } else {
+      // Normal takeaway order
+      toast({
+        title: "Order Placed",
+        description: `Your order for ${item.name} has been received. We'll contact you shortly to confirm.`,
+      });
+    }
+  };
+  
+  const handleCloseBulkForm = () => {
+    setShowBulkForm(false);
+    setSelectedItem(null);
   };
   
   return (
@@ -143,7 +159,7 @@ const MenuSubcategory = ({ title, items, zomatoLink }: MenuSubcategoryProps) => 
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
-                          <RadioGroup defaultValue="normal" className="gap-4">
+                          <RadioGroup defaultValue="normal" className="gap-4" onValueChange={(value) => setOrderType(value as 'normal' | 'bulk')}>
                             <div className="flex items-center space-x-2 border p-3 rounded-md">
                               <RadioGroupItem value="normal" id="normal" />
                               <Label htmlFor="normal" className="flex flex-col">
@@ -163,7 +179,7 @@ const MenuSubcategory = ({ title, items, zomatoLink }: MenuSubcategoryProps) => 
                         <DialogFooter>
                           <Button 
                             type="submit" 
-                            onClick={() => handleTakeawayOrder(item)}
+                            onClick={() => handleTakeawayOrder(item, orderType as 'normal' | 'bulk')}
                           >
                             Proceed to Checkout
                           </Button>
@@ -177,6 +193,25 @@ const MenuSubcategory = ({ title, items, zomatoLink }: MenuSubcategoryProps) => 
           </Card>
         ))}
       </div>
+      
+      {/* Bulk Order Form Dialog */}
+      <Dialog open={showBulkForm} onOpenChange={setShowBulkForm}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bulk Order Request</DialogTitle>
+            <DialogDescription>
+              {selectedItem && `Fill out the details for your bulk order of ${selectedItem.name}`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedItem && (
+            <BulkOrderForm 
+              item={selectedItem} 
+              onClose={handleCloseBulkForm}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
