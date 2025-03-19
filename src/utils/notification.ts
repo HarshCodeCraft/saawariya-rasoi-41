@@ -21,6 +21,9 @@ export interface BulkOrderDetails {
   specialInstructions: string;
 }
 
+// Admin email for notifications
+const ADMIN_EMAIL = "kidor21272@bankrau.com";
+
 /**
  * Formats and sends bulk order notifications via WhatsApp and email
  */
@@ -48,10 +51,11 @@ export async function sendBulkOrderNotification(orderDetails: BulkOrderDetails):
         emailSubject,
         emailBody,
         orderDetails,
+        adminEmail: ADMIN_EMAIL, // Add admin email to the payload
       }),
     });
     
-    console.log("Notification sent to admin", { orderDetails });
+    console.log("Notification sent to admin", { orderDetails, adminEmail: ADMIN_EMAIL });
     
     // For demo purposes, log the messages that would be sent
     console.log("WhatsApp Message:", whatsappMessage);
@@ -62,7 +66,7 @@ export async function sendBulkOrderNotification(orderDetails: BulkOrderDetails):
     // we'll show a message to the user that in production, notifications would be sent
     toast({
       title: "Admin Notification",
-      description: "In production, WhatsApp and email notifications would be sent to the admin.",
+      description: `In production, WhatsApp and email notifications would be sent to ${ADMIN_EMAIL}.`,
     });
     
     return Promise.resolve();
