@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { useOrderMode } from '@/contexts/OrderModeContext';
 import { Flame, Filter, X, Map } from 'lucide-react';
-import LocationSelector from '@/components/LocationSelector';
 import MenuSubcategory from '@/components/MenuSubcategory';
 import SocialLinks from '@/components/SocialLinks';
 import { categories, menuItems } from '@/data/menuData';
@@ -68,10 +67,11 @@ const Menu = () => {
               Explore our authentic dishes from Purwanchal, prepared with traditional recipes.
               {mode === 'takeaway' && " Enjoy 10% off on all takeaway orders!"}
             </p>
-          </div>
-          
-          <div className="flex justify-center mb-8 smooth-appear" style={{ animationDelay: '0.2s' }}>
-            <LocationSelector />
+            {mode === 'takeaway' && (
+              <p className="text-sm mt-2 text-primary font-medium">
+                Located in Kanpur, Uttar-Pradesh, India
+              </p>
+            )}
           </div>
           
           <div className="mb-8 smooth-appear" style={{ animationDelay: '0.3s' }}>
