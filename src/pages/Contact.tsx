@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from 'lucide-react';
@@ -86,8 +85,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-medium mb-1">Phone</h3>
                       <p className="text-muted-foreground text-sm">
-                        +91 123 456 7890<br />
-                        +91 987 654 3210
+                        +91 123 456 7890
                       </p>
                     </div>
                   </li>
@@ -99,8 +97,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-medium mb-1">Email</h3>
                       <p className="text-muted-foreground text-sm">
-                        info@saawariyarasoi.com<br />
-                        support@saawariyarasoi.com
+                        info@saawariyarasoi.com
                       </p>
                     </div>
                   </li>
