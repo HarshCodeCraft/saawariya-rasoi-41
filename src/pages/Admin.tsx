@@ -80,16 +80,12 @@ const Admin = () => {
       
       // For each profile, get the user email
       const profilesWithEmails = await Promise.all(
-        (profilesData || []).map(async (profile) => {
-          const { data: userData } = await supabase
-            .from('auth.users')
-            .select('email')
-            .eq('id', profile.id)
-            .single();
+        profilesData.map(async (profile) => {
+          const { data: userData } = await supabase.auth.getUser();
           
           return {
             ...profile,
-            email: userData?.email || 'Email not available',
+            email: userData?.user?.email || 'Email not available',
           };
         })
       );
