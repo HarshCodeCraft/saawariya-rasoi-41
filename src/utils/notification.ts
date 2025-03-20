@@ -22,7 +22,7 @@ export interface BulkOrderDetails {
 }
 
 // Admin contact details for notifications
-const ADMIN_EMAIL = "kidor21272@bankrau.com";
+const ADMIN_EMAIL = "harshsaini20172018@gmail.com";
 const ADMIN_WHATSAPP = "7075848810";
 
 /**
