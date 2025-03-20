@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Menu, X, ShoppingBag } from 'lucide-react';
 import Logo from './Logo';
 import ModeToggle from './ModeToggle';
+import UserAuthButton from './UserAuthButton';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -74,7 +75,8 @@ const Header = () => {
             ))}
           </nav>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <UserAuthButton />
             <ModeToggle />
             
             <a 
@@ -123,6 +125,14 @@ const Header = () => {
               {link.name}
             </NavLink>
           ))}
+          
+          <NavLink
+            to="/auth"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center justify-center gap-2 px-8 py-3 bg-secondary/50 text-foreground rounded-full font-medium w-full"
+          >
+            Login / Signup
+          </NavLink>
           
           <a 
             href="https://www.zomato.com" 

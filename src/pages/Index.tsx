@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import Hero from '@/components/Hero';
 import FeaturedMenu from '@/components/FeaturedMenu';
@@ -9,23 +9,37 @@ import TakeawayContent from '@/components/TakeawayContent';
 import { useOrderMode } from '@/contexts/OrderModeContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
-import { User, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { mode } = useOrderMode();
   const navigate = useNavigate();
-  // Mock authentication state (in a real app, this would come from an auth provider)
-  const isLoggedIn = false;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuthStatus = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
+    };
+    
+    checkAuthStatus();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsLoggedIn(!!session);
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
   
   const handleLoginPrompt = () => {
-    toast({
-      title: "Authentication Required",
-      description: "Please log in to place an order. This would integrate with Supabase Auth in a complete implementation.",
-    });
-    
-    // In a real app with Supabase integration, this would redirect to a login page
-    console.log("User prompted to log in");
+    navigate('/auth');
   };
   
   return (
