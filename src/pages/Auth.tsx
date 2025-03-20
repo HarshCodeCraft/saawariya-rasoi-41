@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,62 +23,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
-
-  // Check if user is already logged in
-  React.useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setUser(data.session.user);
-        
-        // Check if user is admin or regular user
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.session.user.id)
-          .single();
-        
-        if (profileData?.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
-      }
-    };
-    
-    checkUser();
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session) {
-          setUser(session.user);
-          
-          // Check role and redirect
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profileData?.role === 'admin') {
-            navigate('/admin');
-          } else {
-            navigate('/');
-          }
-        } else {
-          setUser(null);
-        }
-      }
-    );
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -104,7 +50,18 @@ const Auth = () => {
         description: `Welcome back, ${email}!`,
       });
       
-      // Redirect will be handled by the auth state listener
+      // Check if user is admin or regular user
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+      
+      if (profileData?.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (error: any) {
       console.error('Error signing in:', error);
       toast({
@@ -146,10 +103,6 @@ const Auth = () => {
       setLoading(false);
     }
   };
-
-  if (user) {
-    return <Navigate to="/" />;
-  }
 
   return (
     <Layout>

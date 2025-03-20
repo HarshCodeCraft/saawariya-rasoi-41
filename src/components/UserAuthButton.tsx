@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { LogIn, LogOut, Settings, User, ShieldAlert } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const UserAuthButton = () => {
   const [user, setUser] = useState<any>(null);
@@ -13,11 +14,33 @@ const UserAuthButton = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for existing session
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          setUser(session.user);
+          
+          // Get user role
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          
+          setRole(profileData?.role || 'user');
+        } else {
+          setUser(null);
+          setRole(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    // THEN check for existing session
     const checkSession = async () => {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session) {
+        if (sessionData.session?.user) {
           setUser(sessionData.session.user);
           
           // Get user role
@@ -38,26 +61,6 @@ const UserAuthButton = () => {
 
     checkSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user || null);
-        
-        if (session?.user) {
-          // Get user role when auth state changes
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          
-          setRole(profileData?.role || 'user');
-        } else {
-          setRole(null);
-        }
-      }
-    );
-
     return () => {
       subscription.unsubscribe();
     };
@@ -69,7 +72,12 @@ const UserAuthButton = () => {
   };
 
   if (loading) {
-    return <Button variant="outline" disabled>Loading...</Button>;
+    return (
+      <div className="flex items-center gap-2">
+        <Skeleton className="w-8 h-8 rounded-full" />
+        <Skeleton className="w-20 h-6" />
+      </div>
+    );
   }
 
   if (!user) {
