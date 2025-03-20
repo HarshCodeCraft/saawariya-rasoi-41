@@ -20,8 +20,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Create admin user
-    const adminEmail = 'admin@1234';
+    // Create admin user with updated credentials
+    const adminEmail = 'harshuharshu609@gmail.com';
     const adminPassword = 'admin@1234';
 
     // Check if admin already exists
