@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,7 @@ import { AlertCircle, LogOut, Shield, Search, Filter, Calendar, RefreshCw } from
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import AdminDashboard from '@/components/AdminDashboard';
 
 interface UserProfile {
   id: string;
@@ -39,6 +39,7 @@ interface Order {
   special_instructions?: string;
   pickup_location?: string;
   pickup_datetime?: string;
+  phone?: string;
 }
 
 const Admin = () => {
@@ -174,7 +175,8 @@ const Admin = () => {
           ],
           total_amount: '₹660',
           status: 'completed',
-          is_bulk_order: false
+          is_bulk_order: false,
+          phone: '+91 9876543210'
         },
         {
           id: 'ORD-1002',
@@ -188,7 +190,8 @@ const Admin = () => {
           ],
           total_amount: '₹400',
           status: 'processing',
-          is_bulk_order: false
+          is_bulk_order: false,
+          phone: '+91 9876543211'
         },
         {
           id: 'BLK-1003',
@@ -204,7 +207,8 @@ const Admin = () => {
           is_bulk_order: true,
           special_instructions: 'All meals should be packed separately.',
           pickup_location: 'Saawariya Rasoi, Kanpur',
-          pickup_datetime: '2023-07-20T12:00:00Z'
+          pickup_datetime: '2023-07-20T12:00:00Z',
+          phone: '+91 9876543212'
         },
         {
           id: 'ORD-1004',
@@ -218,7 +222,8 @@ const Admin = () => {
           ],
           total_amount: '₹300',
           status: 'completed',
-          is_bulk_order: false
+          is_bulk_order: false,
+          phone: '+91 9876543213'
         },
         {
           id: 'BLK-1005',
@@ -234,7 +239,8 @@ const Admin = () => {
           is_bulk_order: true,
           special_instructions: 'Need extra chutney with each order',
           pickup_location: 'Saawariya Rasoi, Kanpur',
-          pickup_datetime: '2023-07-22T13:30:00Z'
+          pickup_datetime: '2023-07-22T13:30:00Z',
+          phone: '+91 9876543214'
         }
       ];
       
@@ -350,6 +356,48 @@ const Admin = () => {
   const totalRegularPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const totalBulkPages = Math.ceil(filteredBulkOrders.length / ordersPerPage);
 
+  // Generate top selling items data based on orders
+  const generateTopSellingItems = () => {
+    const itemMap = new Map();
+    
+    // Combine all orders
+    const allOrders = [...orders, ...bulkOrders];
+    
+    // Count quantities and revenue for each item
+    allOrders.forEach(order => {
+      order.items.forEach(item => {
+        const existingItem = itemMap.get(item.name);
+        const price = parseInt(item.price.replace(/[^0-9]/g, ''));
+        const revenue = price * item.quantity;
+        
+        if (existingItem) {
+          itemMap.set(item.name, {
+            name: item.name,
+            quantity: existingItem.quantity + item.quantity,
+            revenue: existingItem.revenue + revenue
+          });
+        } else {
+          itemMap.set(item.name, {
+            name: item.name,
+            quantity: item.quantity,
+            revenue: revenue
+          });
+        }
+      });
+    });
+    
+    // Convert to array and sort by quantity
+    const topItems = Array.from(itemMap.values())
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5)
+      .map(item => ({
+        ...item,
+        revenue: `₹${item.revenue}`
+      }));
+      
+    return topItems;
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -375,6 +423,16 @@ const Admin = () => {
       </Layout>
     );
   }
+
+  // Get dashboard metrics
+  const allOrders = [...orders, ...bulkOrders];
+  const pendingOrders = allOrders.filter(order => order.status === 'pending').length;
+  const totalOrders = allOrders.length;
+  const totalUsers = new Set(allOrders.map(order => order.user_id)).size;
+  const recentOrders = [...allOrders].sort((a, b) => 
+    new Date(b.order_date).getTime() - new Date(a.order_date).getTime()
+  ).slice(0, 10);
+  const topSellingItems = generateTopSellingItems();
 
   return (
     <Layout>
@@ -437,12 +495,23 @@ const Admin = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="orders" className="mb-8">
+        <Tabs defaultValue="dashboard" className="mb-8">
           <TabsList className="mb-4">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="bulk-orders">Bulk Orders</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="dashboard">
+            <AdminDashboard 
+              totalOrders={totalOrders}
+              totalUsers={totalUsers}
+              pendingOrders={pendingOrders}
+              recentOrders={recentOrders}
+              topSellingItems={topSellingItems}
+            />
+          </TabsContent>
           
           <TabsContent value="orders">
             <Card>
