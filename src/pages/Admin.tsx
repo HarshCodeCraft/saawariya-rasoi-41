@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import AdminDashboard from '@/components/AdminDashboard';
-import { OrderItem } from '@/utils/orders';
+import { OrderItem, convertJsonToOrderItems } from '@/utils/orders';
 import { Json } from '@/integrations/supabase/types';
 
 interface UserProfile {
@@ -44,27 +43,6 @@ interface Order {
   payment_status: string;
   created_at: string;
 }
-
-const convertJsonToOrderItems = (items: Json): OrderItem[] => {
-  if (!items) return [];
-  
-  // Check if items is an array
-  if (Array.isArray(items)) {
-    return items.map(item => {
-      // Handle each item safely by checking if properties exist and have the correct type
-      if (typeof item === 'object' && item !== null) {
-        const name = typeof item.name === 'string' ? item.name : '';
-        const quantity = typeof item.quantity === 'number' ? item.quantity : 0;
-        const price = typeof item.price === 'string' ? item.price : '₹0';
-        
-        return { name, quantity, price };
-      }
-      return { name: '', quantity: 0, price: '₹0' };
-    });
-  }
-  
-  return [];
-};
 
 const Admin = () => {
   const [loading, setLoading] = useState(true);

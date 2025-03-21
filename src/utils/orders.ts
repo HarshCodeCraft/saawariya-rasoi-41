@@ -59,6 +59,30 @@ export async function saveOrderToSupabase(orderDetails: OrderDetails): Promise<{
   }
 }
 
+// Helper function to convert json from Supabase to OrderItem[]
+export function convertJsonToOrderItems(items: Json): OrderItem[] {
+  if (!items) return [];
+  
+  // Check if items is an array
+  if (Array.isArray(items)) {
+    return items.map(item => {
+      // Handle each item safely by checking if properties exist and have the correct type
+      if (typeof item === 'object' && item !== null) {
+        // Safely access properties with type casting
+        const itemObj = item as Record<string, Json>;
+        const name = typeof itemObj.name === 'string' ? itemObj.name : '';
+        const quantity = typeof itemObj.quantity === 'number' ? itemObj.quantity : 0;
+        const price = typeof itemObj.price === 'string' ? itemObj.price : '₹0';
+        
+        return { name, quantity, price };
+      }
+      return { name: '', quantity: 0, price: '₹0' };
+    });
+  }
+  
+  return [];
+}
+
 export async function sendOrderNotification(orderDetails: OrderDetails): Promise<{success: boolean, error?: any}> {
   try {
     // Call our Supabase Edge Function to send notifications
