@@ -12,18 +12,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import AdminDashboard from '@/components/AdminDashboard';
+import { OrderItem } from '@/utils/orders';
 
 interface UserProfile {
   id: string;
   role: string;
   created_at: string;
   email?: string;
-}
-
-interface OrderItem {
-  name: string;
-  quantity: number;
-  price: string;
 }
 
 interface Order {
@@ -64,7 +59,6 @@ const Admin = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        // Check if user is logged in
         const { data: sessionData } = await supabase.auth.getSession();
         if (!sessionData.session) {
           toast({
@@ -76,7 +70,6 @@ const Admin = () => {
           return;
         }
 
-        // Check if user is an admin
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('role')
@@ -109,13 +102,11 @@ const Admin = () => {
     try {
       setLoading(true);
       
-      // Get the current session and auth token
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) return;
       
       const token = sessionData.session.access_token;
       
-      // Call the edge function to list users
       const response = await fetch('https://mdvmzijhtelwfmpsbnyh.functions.supabase.co/list-users', {
         method: 'GET',
         headers: {
@@ -131,7 +122,6 @@ const Admin = () => {
       
       const { users } = await response.json();
       
-      // Get all profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -139,7 +129,6 @@ const Admin = () => {
       
       if (profilesError) throw profilesError;
       
-      // Merge user and profile data
       const userProfiles = profilesData.map(profile => {
         const user = users.find((u: any) => u.id === profile.id);
         return {
@@ -165,7 +154,6 @@ const Admin = () => {
     try {
       setRefreshing(true);
       
-      // Fetch real orders from Supabase
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
@@ -178,7 +166,6 @@ const Admin = () => {
       console.log('Fetched orders:', ordersData);
       
       if (ordersData && ordersData.length > 0) {
-        // Process the real orders
         const processedOrders = ordersData.map(order => ({
           id: order.id,
           order_id: order.order_id,
@@ -187,23 +174,21 @@ const Admin = () => {
           customer_phone: order.customer_phone,
           pickup_location: order.pickup_location,
           pickup_datetime: order.pickup_datetime,
-          items: order.items,
+          items: order.items as unknown as OrderItem[],
           total_amount: order.total_amount,
           status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
           special_instructions: order.special_instructions,
           payment_status: order.payment_status,
           created_at: order.created_at,
-          // Map to the expected format for compatibility
           user_email: order.customer_email,
           user_name: order.customer_name,
           order_date: order.created_at,
-          is_bulk_order: true // Treating all as bulk orders for now
+          is_bulk_order: order.items.length > 10
         }));
         
         setOrders(processedOrders.filter(order => !order.is_bulk_order));
         setBulkOrders(processedOrders.filter(order => order.is_bulk_order));
       } else {
-        // Fallback to mock data if no real orders found
         const mockOrders: Order[] = [
           {
             id: 'ORD-1001',
@@ -218,7 +203,14 @@ const Admin = () => {
             total_amount: '₹660',
             status: 'completed',
             is_bulk_order: false,
-            phone: '+91 9876543210'
+            customer_phone: '+91 9876543210',
+            customer_name: 'John Doe',
+            customer_email: 'customer1@example.com',
+            pickup_location: 'Saawariya Rasoi, Kanpur',
+            pickup_datetime: '2023-07-20T12:00:00Z',
+            order_id: 'ORD-1001',
+            payment_status: 'completed',
+            created_at: '2023-07-15T10:30:00Z'
           },
           {
             id: 'ORD-1002',
@@ -233,7 +225,14 @@ const Admin = () => {
             total_amount: '₹400',
             status: 'processing',
             is_bulk_order: false,
-            phone: '+91 9876543211'
+            customer_phone: '+91 9876543211',
+            customer_name: 'Jane Smith',
+            customer_email: 'customer2@example.com',
+            pickup_location: 'Saawariya Rasoi, Kanpur',
+            pickup_datetime: '2023-07-20T12:00:00Z',
+            order_id: 'ORD-1002',
+            payment_status: 'completed',
+            created_at: '2023-07-16T18:45:00Z'
           },
           {
             id: 'BLK-1003',
@@ -250,7 +249,12 @@ const Admin = () => {
             special_instructions: 'All meals should be packed separately.',
             pickup_location: 'Saawariya Rasoi, Kanpur',
             pickup_datetime: '2023-07-20T12:00:00Z',
-            phone: '+91 9876543212'
+            customer_phone: '+91 9876543212',
+            customer_name: 'Robert Johnson',
+            customer_email: 'customer3@example.com',
+            order_id: 'BLK-1003',
+            payment_status: 'pending',
+            created_at: '2023-07-17T14:20:00Z'
           },
           {
             id: 'ORD-1004',
@@ -265,7 +269,14 @@ const Admin = () => {
             total_amount: '₹300',
             status: 'completed',
             is_bulk_order: false,
-            phone: '+91 9876543213'
+            customer_phone: '+91 9876543213',
+            customer_name: 'Sarah Wilson',
+            customer_email: 'customer4@example.com',
+            pickup_location: 'Saawariya Rasoi, Kanpur',
+            pickup_datetime: '2023-07-20T12:00:00Z',
+            order_id: 'ORD-1004',
+            payment_status: 'completed',
+            created_at: '2023-07-18T11:10:00Z'
           },
           {
             id: 'BLK-1005',
@@ -282,11 +293,15 @@ const Admin = () => {
             special_instructions: 'Need extra chutney with each order',
             pickup_location: 'Saawariya Rasoi, Kanpur',
             pickup_datetime: '2023-07-22T13:30:00Z',
-            phone: '+91 9876543214'
+            customer_phone: '+91 9876543214',
+            customer_name: 'Michael Brown',
+            customer_email: 'customer5@example.com',
+            order_id: 'BLK-1005',
+            payment_status: 'pending',
+            created_at: '2023-07-19T16:30:00Z'
           }
         ];
         
-        // Filter bulk orders
         const bulkOrdersData = mockOrders.filter(order => order.is_bulk_order);
         const regularOrders = mockOrders.filter(order => !order.is_bulk_order);
         
@@ -329,23 +344,20 @@ const Admin = () => {
   };
 
   const handleBulkOrderNotification = async (order: Order) => {
-    // Prepare order details
     const orderDetails = {
-      orderId: order.id,
-      customerName: order.user_name,
-      customerEmail: order.user_email,
-      customerPhone: "Not Available", // In a real implementation, this would come from your database
+      orderId: order.order_id,
+      customerName: order.customer_name,
+      customerEmail: order.customer_email,
+      customerPhone: order.customer_phone,
       pickupLocation: order.pickup_location || "Saawariya Rasoi, Kanpur",
       pickupDateTime: order.pickup_datetime || "Not specified",
       items: order.items,
       totalAmount: order.total_amount,
-      paymentStatus: "Pending", // In a real implementation, this would be the actual status
+      paymentStatus: order.payment_status,
       specialInstructions: order.special_instructions || "None",
     };
 
     try {
-      // In a real implementation, this would call your notification service
-      // For now, we'll use the existing utility function
       import('@/utils/notification').then(({ sendBulkOrderNotification }) => {
         sendBulkOrderNotification(orderDetails);
       });
@@ -366,7 +378,6 @@ const Admin = () => {
 
   const filterOrders = (orderList: Order[]) => {
     return orderList.filter(order => {
-      // Search filter
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = 
         searchQuery === '' || 
@@ -374,12 +385,10 @@ const Admin = () => {
         order.user_name.toLowerCase().includes(searchLower) ||
         order.user_email.toLowerCase().includes(searchLower);
       
-      // Status filter
       const matchesStatus = 
         statusFilter === 'all' || 
         order.status === statusFilter;
       
-      // Date filter
       const matchesDate = 
         dateFilter === '' || 
         new Date(order.order_date).toLocaleDateString() === new Date(dateFilter).toLocaleDateString();
@@ -391,7 +400,6 @@ const Admin = () => {
   const filteredOrders = filterOrders(orders);
   const filteredBulkOrders = filterOrders(bulkOrders);
   
-  // Pagination
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
@@ -399,14 +407,11 @@ const Admin = () => {
   const totalRegularPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const totalBulkPages = Math.ceil(filteredBulkOrders.length / ordersPerPage);
 
-  // Generate top selling items data based on orders
   const generateTopSellingItems = () => {
     const itemMap = new Map();
     
-    // Combine all orders
     const allOrders = [...orders, ...bulkOrders];
     
-    // Count quantities and revenue for each item
     allOrders.forEach(order => {
       order.items.forEach(item => {
         const existingItem = itemMap.get(item.name);
@@ -429,7 +434,6 @@ const Admin = () => {
       });
     });
     
-    // Convert to array and sort by quantity
     const topItems = Array.from(itemMap.values())
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5)
@@ -467,7 +471,6 @@ const Admin = () => {
     );
   }
 
-  // Get dashboard metrics
   const allOrders = [...orders, ...bulkOrders];
   const pendingOrders = allOrders.filter(order => order.status === 'pending').length;
   const totalOrders = allOrders.length;

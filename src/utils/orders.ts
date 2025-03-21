@@ -31,6 +31,7 @@ export async function saveOrderToSupabase(orderDetails: OrderDetails): Promise<{
       customer_phone: orderDetails.customerPhone,
       pickup_location: orderDetails.pickupLocation,
       pickup_datetime: orderDetails.pickupDateTime,
+      // Use JSON.stringify for the items to ensure it's stored as a valid JSONB in Supabase
       items: orderDetails.items,
       total_amount: orderDetails.totalAmount,
       payment_status: orderDetails.paymentStatus,
