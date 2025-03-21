@@ -189,8 +189,8 @@ export async function fetchAllOrders(): Promise<{success: boolean, data?: any[],
       return { success: false, error: "User not authenticated" };
     }
     
-    // Get the current user's role using a simple approach to avoid type recursion
-    const { data: profileData, error: profileError } = await supabase
+    // Get the current user's role - avoid complex type handling completely
+    const { data, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -201,17 +201,12 @@ export async function fetchAllOrders(): Promise<{success: boolean, data?: any[],
       return { success: false, error: "Could not verify user role" };
     }
     
-    // Use a simple type check instead of complex type inference
-    const isAdmin = typeof profileData === 'object' && 
-                    profileData !== null && 
-                    'role' in profileData && 
-                    profileData.role === 'admin';
-    
-    if (!isAdmin) {
+    // Simple string comparison without complex type handling
+    if (!data || data.role !== 'admin') {
       return { success: false, error: "Only admins can view all orders" };
     }
     
-    const { data, error } = await supabase
+    const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
@@ -221,7 +216,7 @@ export async function fetchAllOrders(): Promise<{success: boolean, data?: any[],
       return { success: false, error };
     }
     
-    return { success: true, data };
+    return { success: true, data: orders };
   } catch (error) {
     console.error("Exception when fetching all orders:", error);
     return { success: false, error };
