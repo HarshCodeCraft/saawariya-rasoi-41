@@ -15,8 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { sendBulkOrderNotification } from '@/utils/notification';
 import PickupLocationMap from './PickupLocationMap';
+import { saveOrderToSupabase, sendOrderNotification, generateOrderId, OrderDetails } from '@/utils/orders';
 
 // Form validation schema
 const formSchema = z.object({
@@ -43,7 +43,7 @@ interface BulkOrderFormProps {
 const BulkOrderForm = ({ item, onClose }: BulkOrderFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   
   // Initialize form with default values
   const form = useForm<FormValues>({
@@ -61,15 +61,18 @@ const BulkOrderForm = ({ item, onClose }: BulkOrderFormProps) => {
     },
   });
   
-  const handleProceedToConfirmation = (data: FormValues) => {
+  const handleProceedToConfirmation = async (data: FormValues) => {
     // Calculate total price
     const itemPrice = item.takeawayPrice || item.price;
     const numericPrice = parseFloat(itemPrice.replace('₹', '').replace(',', ''));
     const totalPrice = numericPrice * data.quantity;
     
+    // Generate a unique order ID
+    const orderId = await generateOrderId();
+    
     // Format order details for confirmation and notification
-    const details = {
-      orderId: `ORDER-${Math.floor(Math.random() * 10000)}`,
+    const details: OrderDetails = {
+      orderId,
       customerName: data.name,
       customerEmail: data.email,
       customerPhone: data.phone,
@@ -98,17 +101,33 @@ const BulkOrderForm = ({ item, onClose }: BulkOrderFormProps) => {
     setIsSubmitting(true);
     
     try {
-      // Send notifications using the orderDetails that was set
-      await sendBulkOrderNotification(orderDetails);
+      if (!orderDetails) {
+        throw new Error("Order details are missing");
+      }
+      
+      // Save order to Supabase
+      const { success: saveSuccess, error: saveError } = await saveOrderToSupabase(orderDetails);
+      
+      if (!saveSuccess) {
+        throw new Error(`Error saving order: ${saveError?.message || "Unknown error"}`);
+      }
+      
+      // Send notifications
+      const { success: notifySuccess, error: notifyError } = await sendOrderNotification(orderDetails);
+      
+      if (!notifySuccess) {
+        console.warn("Order was saved but notifications failed:", notifyError);
+        // Don't throw here, as we still want to show success since the order was saved
+      }
       
       toast({
-        title: "Bulk Order Placed Successfully",
+        title: "Order Placed Successfully",
         description: "Your order has been received. We'll contact you shortly to confirm the details.",
       });
       
       onClose();
     } catch (error) {
-      console.error("Error processing bulk order:", error);
+      console.error("Error processing order:", error);
       toast({
         title: "Error",
         description: "There was an error processing your order. Please try again or contact us directly.",

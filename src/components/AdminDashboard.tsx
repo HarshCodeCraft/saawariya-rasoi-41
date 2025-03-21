@@ -1,9 +1,14 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Activity, ShoppingBag, Users, TrendingUp, Calendar, Phone, User, MapPin, Info } from 'lucide-react';
+
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: string;
+}
 
 interface DashboardProps {
   totalOrders: number;
@@ -11,11 +16,15 @@ interface DashboardProps {
   pendingOrders: number;
   recentOrders: Array<{
     id: string;
-    user_name: string;
-    order_date: string;
+    order_id?: string;
+    user_name?: string;
+    customer_name?: string;
+    order_date?: string;
+    created_at?: string;
     total_amount: string;
     status: string;
     phone?: string;
+    customer_phone?: string;
   }>;
   topSellingItems: Array<{
     name: string;
@@ -111,15 +120,15 @@ const AdminDashboard: React.FC<DashboardProps> = ({
               <TableBody>
                 {recentOrders.slice(0, 5).map((order) => (
                   <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell className="font-medium">{order.order_id || order.id}</TableCell>
                     <TableCell>
-                      <div className="font-medium">{order.user_name}</div>
+                      <div className="font-medium">{order.customer_name || order.user_name}</div>
                       <div className="flex items-center text-xs text-muted-foreground">
                         <Phone className="mr-1 h-3 w-3" /> 
-                        {order.phone || "Not available"}
+                        {order.customer_phone || order.phone || "Not available"}
                       </div>
                     </TableCell>
-                    <TableCell>{new Date(order.order_date).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(order.created_at || order.order_date || "").toLocaleDateString()}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium 
                         ${order.status === 'completed' ? 'bg-green-100 text-green-800' : ''}

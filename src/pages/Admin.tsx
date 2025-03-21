@@ -28,18 +28,23 @@ interface OrderItem {
 
 interface Order {
   id: string;
-  user_id: string;
-  user_email: string;
-  user_name: string;
-  order_date: string;
+  user_id?: string;
+  user_email?: string;
+  user_name?: string;
+  order_date?: string;
+  order_id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  pickup_location: string;
+  pickup_datetime: string;
   items: OrderItem[];
   total_amount: string;
   status: 'pending' | 'processing' | 'completed' | 'cancelled';
-  is_bulk_order: boolean;
+  is_bulk_order?: boolean;
   special_instructions?: string;
-  pickup_location?: string;
-  pickup_datetime?: string;
-  phone?: string;
+  payment_status: string;
+  created_at: string;
 }
 
 const Admin = () => {
@@ -160,96 +165,134 @@ const Admin = () => {
     try {
       setRefreshing(true);
       
-      // For demonstration purposes, we'll create some mock order data
-      // In a real implementation, you would fetch this from your Supabase database
-      const mockOrders: Order[] = [
-        {
-          id: 'ORD-1001',
-          user_id: '123',
-          user_email: 'customer1@example.com',
-          user_name: 'John Doe',
-          order_date: '2023-07-15T10:30:00Z',
-          items: [
-            { name: 'Paneer Butter Masala', quantity: 2, price: '₹250' },
-            { name: 'Naan', quantity: 4, price: '₹40' }
-          ],
-          total_amount: '₹660',
-          status: 'completed',
-          is_bulk_order: false,
-          phone: '+91 9876543210'
-        },
-        {
-          id: 'ORD-1002',
-          user_id: '456',
-          user_email: 'customer2@example.com',
-          user_name: 'Jane Smith',
-          order_date: '2023-07-16T18:45:00Z',
-          items: [
-            { name: 'Chicken Biryani', quantity: 1, price: '₹350' },
-            { name: 'Raita', quantity: 1, price: '₹50' }
-          ],
-          total_amount: '₹400',
-          status: 'processing',
-          is_bulk_order: false,
-          phone: '+91 9876543211'
-        },
-        {
-          id: 'BLK-1003',
-          user_id: '789',
-          user_email: 'customer3@example.com',
-          user_name: 'Robert Johnson',
-          order_date: '2023-07-17T14:20:00Z',
-          items: [
-            { name: 'Veg Thali', quantity: 25, price: '₹200' }
-          ],
-          total_amount: '₹5000',
-          status: 'pending',
-          is_bulk_order: true,
-          special_instructions: 'All meals should be packed separately.',
-          pickup_location: 'Saawariya Rasoi, Kanpur',
-          pickup_datetime: '2023-07-20T12:00:00Z',
-          phone: '+91 9876543212'
-        },
-        {
-          id: 'ORD-1004',
-          user_id: '012',
-          user_email: 'customer4@example.com',
-          user_name: 'Sarah Wilson',
-          order_date: '2023-07-18T11:10:00Z',
-          items: [
-            { name: 'Dal Makhani', quantity: 1, price: '₹180' },
-            { name: 'Jeera Rice', quantity: 1, price: '₹120' }
-          ],
-          total_amount: '₹300',
-          status: 'completed',
-          is_bulk_order: false,
-          phone: '+91 9876543213'
-        },
-        {
-          id: 'BLK-1005',
-          user_id: '345',
-          user_email: 'customer5@example.com',
-          user_name: 'Michael Brown',
-          order_date: '2023-07-19T16:30:00Z',
-          items: [
-            { name: 'Chole Bhature', quantity: 30, price: '₹150' }
-          ],
-          total_amount: '₹4500',
-          status: 'processing',
-          is_bulk_order: true,
-          special_instructions: 'Need extra chutney with each order',
-          pickup_location: 'Saawariya Rasoi, Kanpur',
-          pickup_datetime: '2023-07-22T13:30:00Z',
-          phone: '+91 9876543214'
-        }
-      ];
+      // Fetch real orders from Supabase
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
       
-      // Filter bulk orders
-      const bulkOrdersData = mockOrders.filter(order => order.is_bulk_order);
-      const regularOrders = mockOrders.filter(order => !order.is_bulk_order);
+      if (ordersError) {
+        throw ordersError;
+      }
       
-      setOrders(regularOrders);
-      setBulkOrders(bulkOrdersData);
+      console.log('Fetched orders:', ordersData);
+      
+      if (ordersData && ordersData.length > 0) {
+        // Process the real orders
+        const processedOrders = ordersData.map(order => ({
+          id: order.id,
+          order_id: order.order_id,
+          customer_name: order.customer_name,
+          customer_email: order.customer_email,
+          customer_phone: order.customer_phone,
+          pickup_location: order.pickup_location,
+          pickup_datetime: order.pickup_datetime,
+          items: order.items,
+          total_amount: order.total_amount,
+          status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+          special_instructions: order.special_instructions,
+          payment_status: order.payment_status,
+          created_at: order.created_at,
+          // Map to the expected format for compatibility
+          user_email: order.customer_email,
+          user_name: order.customer_name,
+          order_date: order.created_at,
+          is_bulk_order: true // Treating all as bulk orders for now
+        }));
+        
+        setOrders(processedOrders.filter(order => !order.is_bulk_order));
+        setBulkOrders(processedOrders.filter(order => order.is_bulk_order));
+      } else {
+        // Fallback to mock data if no real orders found
+        const mockOrders: Order[] = [
+          {
+            id: 'ORD-1001',
+            user_id: '123',
+            user_email: 'customer1@example.com',
+            user_name: 'John Doe',
+            order_date: '2023-07-15T10:30:00Z',
+            items: [
+              { name: 'Paneer Butter Masala', quantity: 2, price: '₹250' },
+              { name: 'Naan', quantity: 4, price: '₹40' }
+            ],
+            total_amount: '₹660',
+            status: 'completed',
+            is_bulk_order: false,
+            phone: '+91 9876543210'
+          },
+          {
+            id: 'ORD-1002',
+            user_id: '456',
+            user_email: 'customer2@example.com',
+            user_name: 'Jane Smith',
+            order_date: '2023-07-16T18:45:00Z',
+            items: [
+              { name: 'Chicken Biryani', quantity: 1, price: '₹350' },
+              { name: 'Raita', quantity: 1, price: '₹50' }
+            ],
+            total_amount: '₹400',
+            status: 'processing',
+            is_bulk_order: false,
+            phone: '+91 9876543211'
+          },
+          {
+            id: 'BLK-1003',
+            user_id: '789',
+            user_email: 'customer3@example.com',
+            user_name: 'Robert Johnson',
+            order_date: '2023-07-17T14:20:00Z',
+            items: [
+              { name: 'Veg Thali', quantity: 25, price: '₹200' }
+            ],
+            total_amount: '₹5000',
+            status: 'pending',
+            is_bulk_order: true,
+            special_instructions: 'All meals should be packed separately.',
+            pickup_location: 'Saawariya Rasoi, Kanpur',
+            pickup_datetime: '2023-07-20T12:00:00Z',
+            phone: '+91 9876543212'
+          },
+          {
+            id: 'ORD-1004',
+            user_id: '012',
+            user_email: 'customer4@example.com',
+            user_name: 'Sarah Wilson',
+            order_date: '2023-07-18T11:10:00Z',
+            items: [
+              { name: 'Dal Makhani', quantity: 1, price: '₹180' },
+              { name: 'Jeera Rice', quantity: 1, price: '₹120' }
+            ],
+            total_amount: '₹300',
+            status: 'completed',
+            is_bulk_order: false,
+            phone: '+91 9876543213'
+          },
+          {
+            id: 'BLK-1005',
+            user_id: '345',
+            user_email: 'customer5@example.com',
+            user_name: 'Michael Brown',
+            order_date: '2023-07-19T16:30:00Z',
+            items: [
+              { name: 'Chole Bhature', quantity: 30, price: '₹150' }
+            ],
+            total_amount: '₹4500',
+            status: 'processing',
+            is_bulk_order: true,
+            special_instructions: 'Need extra chutney with each order',
+            pickup_location: 'Saawariya Rasoi, Kanpur',
+            pickup_datetime: '2023-07-22T13:30:00Z',
+            phone: '+91 9876543214'
+          }
+        ];
+        
+        // Filter bulk orders
+        const bulkOrdersData = mockOrders.filter(order => order.is_bulk_order);
+        const regularOrders = mockOrders.filter(order => !order.is_bulk_order);
+        
+        setOrders(regularOrders);
+        setBulkOrders(bulkOrdersData);
+      }
     } catch (error) {
       console.error('Error fetching order data:', error);
       toast({

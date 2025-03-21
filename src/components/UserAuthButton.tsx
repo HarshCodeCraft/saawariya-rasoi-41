@@ -82,14 +82,24 @@ const UserAuthButton = () => {
 
   if (!user) {
     return (
-      <Button 
-        onClick={() => navigate('/auth')} 
-        variant="outline" 
-        className="gap-2"
-      >
-        <LogIn size={16} />
-        <span>Login</span>
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          onClick={() => navigate('/auth?mode=login')} 
+          variant="outline" 
+          className="gap-2"
+        >
+          <LogIn size={16} />
+          <span>Login</span>
+        </Button>
+        <Button 
+          onClick={() => navigate('/auth?mode=signup')} 
+          variant="default" 
+          className="gap-2"
+        >
+          <User size={16} />
+          <span>Signup</span>
+        </Button>
+      </div>
     );
   }
 
