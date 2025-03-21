@@ -11,6 +11,7 @@ import UserAuthButton from './UserAuthButton';
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { mode } = useOrderMode();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -79,15 +80,13 @@ const Header = () => {
             <UserAuthButton />
             <ModeToggle />
             
-            <a 
-              href="https://www.zomato.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
+            <NavLink 
+              to="/menu" 
               className="hidden md:flex items-center gap-2 px-4 py-2 bg-saawariya-red text-white rounded-full font-medium text-sm transition-all hover:brightness-105 hover-lift"
             >
               <ShoppingBag size={16} />
               <span>Order Now</span>
-            </a>
+            </NavLink>
             
             <button 
               className="block md:hidden text-foreground"
@@ -134,16 +133,14 @@ const Header = () => {
             Login / Signup
           </NavLink>
           
-          <a 
-            href="https://www.zomato.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
+          <NavLink
+            to="/menu"
             className="flex items-center justify-center gap-2 px-8 py-3 bg-saawariya-red text-white rounded-full font-medium w-full mt-4 hover:brightness-105"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <ShoppingBag size={18} />
             <span>Order Now</span>
-          </a>
+          </NavLink>
         </div>
       </div>
     </header>
