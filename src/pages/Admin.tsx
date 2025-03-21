@@ -44,6 +44,20 @@ interface Order {
   created_at: string;
 }
 
+const convertJsonToOrderItems = (items: Json): OrderItem[] => {
+  if (!items) return [];
+  
+  if (Array.isArray(items)) {
+    return items.map(item => ({
+      name: typeof item.name === 'string' ? item.name : '',
+      quantity: typeof item.quantity === 'number' ? item.quantity : 0,
+      price: typeof item.price === 'string' ? item.price : '₹0'
+    }));
+  }
+  
+  return [];
+};
+
 const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -169,7 +183,7 @@ const Admin = () => {
       
       if (ordersData && ordersData.length > 0) {
         const processedOrders = ordersData.map(order => {
-          const itemsArray = Array.isArray(order.items) ? order.items : [];
+          const orderItems = convertJsonToOrderItems(order.items);
           
           return {
             id: order.id,
@@ -180,7 +194,7 @@ const Admin = () => {
             user_phone: order.customer_phone,
             pickup_location: order.pickup_location,
             pickup_datetime: order.pickup_datetime,
-            items: itemsArray as OrderItem[],
+            items: orderItems,
             total_amount: order.total_amount,
             status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
             special_instructions: order.special_instructions,
@@ -189,7 +203,7 @@ const Admin = () => {
             user_email: order.customer_email,
             user_name: order.customer_name,
             order_date: order.created_at,
-            is_bulk_order: Array.isArray(order.items) && order.items.length > 10
+            is_bulk_order: orderItems.length > 10
           };
         });
         

@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { Json } from '@/integrations/supabase/types';
 
 export interface OrderItem {
   name: string;
@@ -32,7 +33,7 @@ export async function saveOrderToSupabase(orderDetails: OrderDetails): Promise<{
       pickup_location: orderDetails.pickupLocation,
       pickup_datetime: orderDetails.pickupDateTime,
       // Convert OrderItem[] to Json compatible format
-      items: orderDetails.items as any, // Type assertion to any to bypass type check
+      items: orderDetails.items as unknown as Json, // More specific type assertion
       total_amount: orderDetails.totalAmount,
       payment_status: orderDetails.paymentStatus,
       special_instructions: orderDetails.specialInstructions || null,
