@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Json } from '@/integrations/supabase/types';
@@ -40,7 +39,6 @@ export async function saveOrderToSupabase(orderDetails: OrderDetails): Promise<{
       customer_phone: orderDetails.customerPhone,
       pickup_location: orderDetails.pickupLocation,
       pickup_datetime: orderDetails.pickupDateTime,
-      // Convert OrderItem[] to Json compatible format with explicit type assertion
       items: orderDetails.items as unknown as Json,
       total_amount: orderDetails.totalAmount,
       payment_status: orderDetails.paymentStatus,
@@ -191,14 +189,22 @@ export async function fetchAllOrders(): Promise<{success: boolean, data?: any[],
       return { success: false, error: "User not authenticated" };
     }
     
-    // Get the current user's role
+    // Get the current user's role - simplified to avoid type recursion
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
       
-    if (profileError || profileData?.role !== 'admin') {
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      return { success: false, error: "Could not verify user role" };
+    }
+    
+    // Safely access the role property
+    const userRole = profileData && typeof profileData === 'object' ? profileData.role : null;
+    
+    if (userRole !== 'admin') {
       return { success: false, error: "Only admins can view all orders" };
     }
     
