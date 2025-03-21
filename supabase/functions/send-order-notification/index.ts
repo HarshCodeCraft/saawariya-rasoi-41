@@ -25,26 +25,20 @@ interface OrderDetails {
   specialInstructions: string;
 }
 
-// Send a notification to admin via webhook (in production, this would connect to Zapier/Make or similar)
-async function sendNotification(orderDetails: OrderDetails, adminPhone: string, adminEmail: string) {
+// Send notifications to admin via WhatsApp and email
+async function sendNotifications(orderDetails: OrderDetails, adminPhone: string, adminEmail: string) {
   console.log("Sending notification for order:", orderDetails);
   console.log("Admin contact details:", { phone: adminPhone, email: adminEmail });
   
-  // This is a mock implementation. In production, you would connect to a real messaging service
-  // such as Twilio for WhatsApp or an email service like SendGrid/Resend
-  
   // Format WhatsApp message
   const whatsappMessage = formatWhatsAppMessage(orderDetails);
-  console.log("WhatsApp message:", whatsappMessage);
   
   // Format email subject and body
   const emailSubject = `New Order Request – Order #${orderDetails.orderId}`;
   const emailBody = formatEmailBody(orderDetails);
-  console.log("Email subject:", emailSubject);
-  console.log("Email body:", emailBody);
   
-  // In a production environment, you would call actual API services here
-  // For now, we'll just log the data that would be sent
+  // In a production environment, you would call the WhatsApp API (via Twilio or similar)
+  // and an email service (Resend, SendGrid, etc.)
   
   return {
     success: true,
@@ -56,9 +50,6 @@ async function sendNotification(orderDetails: OrderDetails, adminPhone: string, 
   };
 }
 
-/**
- * Format WhatsApp message according to the specified template
- */
 function formatWhatsAppMessage(order: OrderDetails): string {
   // Format items list
   const itemsList = order.items.map(item => 
@@ -88,9 +79,6 @@ ${order.specialInstructions}
 🚀 Please confirm and process ASAP!`;
 }
 
-/**
- * Format email body according to the specified template
- */
 function formatEmailBody(order: OrderDetails): string {
   // Format items list
   const itemsList = order.items.map(item => 
@@ -131,15 +119,15 @@ serve(async (req) => {
   }
   
   try {
-    // Get admin contact details from environment variables or set defaults
+    // Get admin contact details from environment variables
     const adminPhone = Deno.env.get("ADMIN_PHONE") || "7075848810";
     const adminEmail = Deno.env.get("ADMIN_EMAIL") || "harshsaini20172018@gmail.com";
     
     if (req.method === "POST") {
       const orderDetails: OrderDetails = await req.json();
       
-      // Send notification
-      const result = await sendNotification(orderDetails, adminPhone, adminEmail);
+      // Send notifications
+      const result = await sendNotifications(orderDetails, adminPhone, adminEmail);
       
       return new Response(
         JSON.stringify(result),

@@ -24,8 +24,16 @@ export interface OrderDetails {
 
 export async function saveOrderToSupabase(orderDetails: OrderDetails): Promise<{success: boolean, error?: any}> {
   try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+    
     // Convert order details to match our table schema
     const orderData = {
+      user_id: user.id,
       order_id: orderDetails.orderId,
       customer_name: orderDetails.customerName,
       customer_email: orderDetails.customerEmail,
@@ -108,4 +116,105 @@ export async function generateOrderId(): Promise<string> {
   const timestamp = new Date().getTime().toString().slice(-6);
   const randomString = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `SR-${timestamp}-${randomString}`;
+}
+
+export async function updateOrderStatus(orderId: string, status: string): Promise<{success: boolean, error?: any}> {
+  try {
+    // Check if user is admin
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+    
+    // Get the current user's role
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+      
+    if (profileError || profileData?.role !== 'admin') {
+      return { success: false, error: "Only admins can update order status" };
+    }
+    
+    // Update the order status
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('order_id', orderId)
+      .select();
+      
+    if (error) {
+      console.error("Error updating order status:", error);
+      return { success: false, error };
+    }
+    
+    console.log("Order status updated:", data);
+    return { success: true };
+  } catch (error) {
+    console.error("Exception when updating order status:", error);
+    return { success: false, error };
+  }
+}
+
+export async function fetchUserOrders(): Promise<{success: boolean, data?: any[], error?: any}> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error("Error fetching user orders:", error);
+      return { success: false, error };
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    console.error("Exception when fetching user orders:", error);
+    return { success: false, error };
+  }
+}
+
+export async function fetchAllOrders(): Promise<{success: boolean, data?: any[], error?: any}> {
+  try {
+    // Check if user is admin
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+    
+    // Get the current user's role
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+      
+    if (profileError || profileData?.role !== 'admin') {
+      return { success: false, error: "Only admins can view all orders" };
+    }
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error("Error fetching all orders:", error);
+      return { success: false, error };
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    console.error("Exception when fetching all orders:", error);
+    return { success: false, error };
+  }
 }

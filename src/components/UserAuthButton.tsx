@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LogIn, LogOut, Settings, User, ShieldAlert } from 'lucide-react';
+import { LogIn, LogOut, Settings, User, ShieldAlert, ClipboardList } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/components/ui/use-toast';
 
 const UserAuthButton = () => {
   const [user, setUser] = useState<any>(null);
@@ -67,8 +68,21 @@ const UserAuthButton = () => {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been signed out of your account",
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Sign out failed",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -89,7 +103,7 @@ const UserAuthButton = () => {
           className="gap-2"
         >
           <LogIn size={16} />
-          <span>Login</span>
+          <span className="hidden sm:inline">Login</span>
         </Button>
         <Button 
           onClick={() => navigate('/auth?mode=signup')} 
@@ -97,7 +111,7 @@ const UserAuthButton = () => {
           className="gap-2"
         >
           <User size={16} />
-          <span>Signup</span>
+          <span className="hidden sm:inline">Signup</span>
         </Button>
       </div>
     );
@@ -115,9 +129,13 @@ const UserAuthButton = () => {
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/profile')}>
             <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/my-orders')}>
+            <ClipboardList className="mr-2 h-4 w-4" />
+            <span>My Orders</span>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />

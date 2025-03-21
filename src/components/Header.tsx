@@ -7,10 +7,12 @@ import { Menu, X, ShoppingBag } from 'lucide-react';
 import Logo from './Logo';
 import ModeToggle from './ModeToggle';
 import UserAuthButton from './UserAuthButton';
+import { supabase } from '@/integrations/supabase/client';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { mode } = useOrderMode();
   
   useEffect(() => {
@@ -33,6 +35,27 @@ const Header = () => {
       document.body.style.overflow = '';
     };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuthStatus = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
+    };
+    
+    checkAuthStatus();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsLoggedIn(!!session);
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
@@ -80,13 +103,15 @@ const Header = () => {
             <UserAuthButton />
             <ModeToggle />
             
-            <NavLink 
-              to="/menu" 
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-saawariya-red text-white rounded-full font-medium text-sm transition-all hover:brightness-105 hover-lift"
-            >
-              <ShoppingBag size={16} />
-              <span>Order Now</span>
-            </NavLink>
+            {isLoggedIn && (
+              <NavLink 
+                to="/menu" 
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-saawariya-red text-white rounded-full font-medium text-sm transition-all hover:brightness-105 hover-lift"
+              >
+                <ShoppingBag size={16} />
+                <span>Order Now</span>
+              </NavLink>
+            )}
             
             <button 
               className="block md:hidden text-foreground"
@@ -125,22 +150,24 @@ const Header = () => {
             </NavLink>
           ))}
           
-          <NavLink
-            to="/auth"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center justify-center gap-2 px-8 py-3 bg-secondary/50 text-foreground rounded-full font-medium w-full"
-          >
-            Login / Signup
-          </NavLink>
-          
-          <NavLink
-            to="/menu"
-            className="flex items-center justify-center gap-2 px-8 py-3 bg-saawariya-red text-white rounded-full font-medium w-full mt-4 hover:brightness-105"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <ShoppingBag size={18} />
-            <span>Order Now</span>
-          </NavLink>
+          {isLoggedIn ? (
+            <NavLink
+              to="/menu"
+              className="flex items-center justify-center gap-2 px-8 py-3 bg-saawariya-red text-white rounded-full font-medium w-full mt-4 hover:brightness-105"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <ShoppingBag size={18} />
+              <span>Order Now</span>
+            </NavLink>
+          ) : (
+            <NavLink
+              to="/auth"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-2 px-8 py-3 bg-secondary/50 text-foreground rounded-full font-medium w-full"
+            >
+              Login / Signup
+            </NavLink>
+          )}
         </div>
       </div>
     </header>
