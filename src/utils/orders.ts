@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Json } from '@/integrations/supabase/types';
@@ -184,30 +185,28 @@ export async function fetchUserOrders(): Promise<{success: boolean, data?: any[]
 export async function fetchAllOrders(): Promise<{ success: boolean; data?: any[]; error?: string }> {
   try {
     // Check if user is authenticated
-    const { data: userData, error: authError } = await supabase.auth.getUser();
-    if (authError || !userData?.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return { success: false, error: "User not authenticated" };
     }
 
-    const user = userData.user;
-
-    // Explicitly define the expected structure of profile data
-    type Profile = { role: string };
-
     // Get user role from profiles table
-    const { data: profileData, error: profileError } = await supabase
+    // Avoid excessive type instantiation by simplifying our approach
+    const { data, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single<Profile>(); // Explicit type annotation
+      .single();
 
-    if (profileError || !profileData) {
+    if (profileError || !data) {
       console.error("Error fetching profile:", profileError);
       return { success: false, error: "Could not verify user role" };
     }
 
-    // Ensure user is an admin
-    if (profileData.role !== 'admin') {
+    // Use simple string comparison
+    const role = data.role as string;
+    if (role !== 'admin') {
       return { success: false, error: "Only admins can view all orders" };
     }
 
