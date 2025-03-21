@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Json } from '@/integrations/supabase/types';
@@ -189,8 +190,8 @@ export async function fetchAllOrders(): Promise<{success: boolean, data?: any[],
       return { success: false, error: "User not authenticated" };
     }
     
-    // Get user role
-    const { data: profileData, error: profileError } = await supabase
+    // Get user role with explicit type annotation to avoid deep instantiation
+    const { data: userData, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -201,9 +202,9 @@ export async function fetchAllOrders(): Promise<{success: boolean, data?: any[],
       return { success: false, error: "Could not verify user role" };
     }
     
-    // Simple string check
-    const role = profileData?.role;
-    if (role !== 'admin') {
+    // Simple type-safe check using explicit casting
+    const userRole = userData?.role as string | undefined;
+    if (userRole !== 'admin') {
       return { success: false, error: "Only admins can view all orders" };
     }
     
