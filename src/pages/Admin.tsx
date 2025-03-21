@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import AdminDashboard from '@/components/AdminDashboard';
 import { OrderItem } from '@/utils/orders';
+import { Json } from '@/integrations/supabase/types';
 
 interface UserProfile {
   id: string;
@@ -26,6 +27,7 @@ interface Order {
   user_id?: string;
   user_email?: string;
   user_name?: string;
+  user_phone?: string;
   order_date?: string;
   order_id: string;
   customer_name: string;
@@ -166,25 +168,30 @@ const Admin = () => {
       console.log('Fetched orders:', ordersData);
       
       if (ordersData && ordersData.length > 0) {
-        const processedOrders = ordersData.map(order => ({
-          id: order.id,
-          order_id: order.order_id,
-          customer_name: order.customer_name,
-          customer_email: order.customer_email,
-          customer_phone: order.customer_phone,
-          pickup_location: order.pickup_location,
-          pickup_datetime: order.pickup_datetime,
-          items: order.items as unknown as OrderItem[],
-          total_amount: order.total_amount,
-          status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
-          special_instructions: order.special_instructions,
-          payment_status: order.payment_status,
-          created_at: order.created_at,
-          user_email: order.customer_email,
-          user_name: order.customer_name,
-          order_date: order.created_at,
-          is_bulk_order: order.items.length > 10
-        }));
+        const processedOrders = ordersData.map(order => {
+          const itemsArray = Array.isArray(order.items) ? order.items : [];
+          
+          return {
+            id: order.id,
+            order_id: order.order_id,
+            customer_name: order.customer_name,
+            customer_email: order.customer_email,
+            customer_phone: order.customer_phone,
+            user_phone: order.customer_phone,
+            pickup_location: order.pickup_location,
+            pickup_datetime: order.pickup_datetime,
+            items: itemsArray as OrderItem[],
+            total_amount: order.total_amount,
+            status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+            special_instructions: order.special_instructions,
+            payment_status: order.payment_status,
+            created_at: order.created_at,
+            user_email: order.customer_email,
+            user_name: order.customer_name,
+            order_date: order.created_at,
+            is_bulk_order: Array.isArray(order.items) && order.items.length > 10
+          };
+        });
         
         setOrders(processedOrders.filter(order => !order.is_bulk_order));
         setBulkOrders(processedOrders.filter(order => order.is_bulk_order));
