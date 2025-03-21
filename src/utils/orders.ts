@@ -190,8 +190,8 @@ export async function fetchAllOrders(): Promise<{success: boolean, data?: any[],
       return { success: false, error: "User not authenticated" };
     }
     
-    // Get user role with explicit type annotation to avoid deep instantiation
-    const { data: userData, error: profileError } = await supabase
+    // Get user role from profiles table
+    const { data, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -202,12 +202,12 @@ export async function fetchAllOrders(): Promise<{success: boolean, data?: any[],
       return { success: false, error: "Could not verify user role" };
     }
     
-    // Simple type-safe check using explicit casting
-    const userRole = userData?.role as string | undefined;
-    if (userRole !== 'admin') {
+    // Check if user is admin (using string comparison, not complex types)
+    if (!data || data.role !== 'admin') {
       return { success: false, error: "Only admins can view all orders" };
     }
     
+    // Fetch all orders for admin
     const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
