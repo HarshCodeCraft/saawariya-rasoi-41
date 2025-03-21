@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Json } from '@/integrations/supabase/types';
@@ -182,45 +181,50 @@ export async function fetchUserOrders(): Promise<{success: boolean, data?: any[]
   }
 }
 
-export async function fetchAllOrders(): Promise<{success: boolean, data?: any[], error?: any}> {
+export async function fetchAllOrders(): Promise<{ success: boolean; data?: any[]; error?: string }> {
   try {
     // Check if user is authenticated
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: userData, error: authError } = await supabase.auth.getUser();
+    if (authError || !userData?.user) {
       return { success: false, error: "User not authenticated" };
     }
-    
+
+    const user = userData.user;
+
+    // Explicitly define the expected structure of profile data
+    type Profile = { role: string };
+
     // Get user role from profiles table
-    const { data, error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single();
-      
-    if (profileError) {
+      .single<Profile>(); // Explicit type annotation
+
+    if (profileError || !profileData) {
       console.error("Error fetching profile:", profileError);
       return { success: false, error: "Could not verify user role" };
     }
-    
-    // Check if user is admin (using string comparison, not complex types)
-    if (!data || data.role !== 'admin') {
+
+    // Ensure user is an admin
+    if (profileData.role !== 'admin') {
       return { success: false, error: "Only admins can view all orders" };
     }
-    
+
     // Fetch all orders for admin
-    const { data: orders, error } = await supabase
+    const { data: orders, error: orderError } = await supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error("Error fetching all orders:", error);
-      return { success: false, error };
+
+    if (orderError) {
+      console.error("Error fetching all orders:", orderError);
+      return { success: false, error: "Failed to fetch orders" };
     }
-    
+
     return { success: true, data: orders };
   } catch (error) {
     console.error("Exception when fetching all orders:", error);
-    return { success: false, error };
+    return { success: false, error: "Unexpected error occurred" };
   }
 }
