@@ -15,17 +15,17 @@ export async function fetchUserOrders(): Promise<{ success: boolean; data?: Orde
     }
 
     const userId = authResult.data.user.id;
-    const ordersResult = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (ordersResult.error) {
-      return { success: false, error: ordersResult.error.message };
+    if (error) {
+      return { success: false, error: error.message };
     }
 
-    return { success: true, data: ordersResult.data };
+    return { success: true, data };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unexpected error occurred";
     console.error("Exception when fetching user orders:", error);
@@ -39,42 +39,42 @@ export async function fetchUserOrders(): Promise<{ success: boolean; data?: Orde
 export async function fetchAllOrders(): Promise<{ success: boolean; data?: OrderRecord[]; error?: string }> {
   try {
     // Check authentication
-    const authResult = await supabase.auth.getUser();
+    const authResponse = await supabase.auth.getUser();
     
-    if (authResult.error || !authResult.data?.user) {
+    if (authResponse.error || !authResponse.data?.user) {
       return { success: false, error: "User not authenticated" };
     }
     
-    const userId = authResult.data.user.id;
+    const userId = authResponse.data.user.id;
     
     // Check if user is admin
-    const profileResult = await supabase
+    const profileResponse = await supabase
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
       
-    if (profileResult.error) {
-      console.error("Error fetching profile:", profileResult.error);
+    if (profileResponse.error) {
+      console.error("Error fetching profile:", profileResponse.error);
       return { success: false, error: "Could not verify user role" };
     }
     
-    if (!profileResult.data || profileResult.data.role !== 'admin') {
+    if (!profileResponse.data || profileResponse.data.role !== 'admin') {
       return { success: false, error: "Only admins can view all orders" };
     }
 
     // Fetch all orders
-    const ordersResult = await supabase
+    const ordersResponse = await supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (ordersResult.error) {
-      console.error("Error fetching all orders:", ordersResult.error);
-      return { success: false, error: ordersResult.error.message };
+    if (ordersResponse.error) {
+      console.error("Error fetching all orders:", ordersResponse.error);
+      return { success: false, error: ordersResponse.error.message };
     }
 
-    return { success: true, data: ordersResult.data };
+    return { success: true, data: ordersResponse.data };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unexpected error occurred";
     console.error("Exception when fetching all orders:", error);
