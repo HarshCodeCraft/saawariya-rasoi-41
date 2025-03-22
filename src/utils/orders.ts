@@ -19,206 +19,157 @@ export interface OrderDetails {
   items: OrderItem[];
   totalAmount: string;
   paymentStatus: string;
-  specialInstructions: string;
+  specialInstructions?: string;
 }
 
-export async function saveOrderToSupabase(orderDetails: OrderDetails): Promise<{success: boolean, error?: any}> {
+/**
+ * Save Order to Supabase
+ */
+export async function saveOrderToSupabase(orderDetails: OrderDetails): Promise<{ success: boolean; error?: any }> {
   try {
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !authData?.user) {
       return { success: false, error: "User not authenticated" };
     }
-    
-    // Convert order details to match our table schema
+
+    const user = authData.user;
+
     const orderData = {
       user_id: user.id,
-      order_id: orderDetails.orderId,
+      order_id: orderDetails.orderId || uuidv4(),
       customer_name: orderDetails.customerName,
       customer_email: orderDetails.customerEmail,
       customer_phone: orderDetails.customerPhone,
       pickup_location: orderDetails.pickupLocation,
       pickup_datetime: orderDetails.pickupDateTime,
-      items: orderDetails.items as unknown as Json,
+      items: JSON.stringify(orderDetails.items), // Ensure proper JSON storage
       total_amount: orderDetails.totalAmount,
       payment_status: orderDetails.paymentStatus,
       special_instructions: orderDetails.specialInstructions || null,
-      status: 'pending' // Default status
+      status: 'pending', // Default status
+      created_at: new Date().toISOString(),
     };
 
-    // Insert the order into Supabase
-    const { data, error } = await supabase
-      .from('orders')
-      .insert(orderData)
-      .select();
+    const { error } = await supabase.from('orders').insert([orderData]);
 
     if (error) {
       console.error("Error saving order to Supabase:", error);
-      return { success: false, error };
+      return { success: false, error: error.message };
     }
 
-    console.log("Order saved to Supabase:", data);
     return { success: true };
   } catch (error) {
     console.error("Exception when saving order:", error);
-    return { success: false, error };
+    return { success: false, error: error.message };
   }
 }
 
-// Helper function to convert json from Supabase to OrderItem[]
+/**
+ * Convert JSON to OrderItem[]
+ */
 export function convertJsonToOrderItems(items: Json): OrderItem[] {
-  if (!items) return [];
-  
-  // Check if items is an array
-  if (Array.isArray(items)) {
-    return items.map(item => {
-      // Handle each item safely by checking if properties exist and have the correct type
-      if (typeof item === 'object' && item !== null) {
-        // Safely access properties with type casting
-        const itemObj = item as Record<string, Json>;
-        const name = typeof itemObj.name === 'string' ? itemObj.name : '';
-        const quantity = typeof itemObj.quantity === 'number' ? itemObj.quantity : 0;
-        const price = typeof itemObj.price === 'string' ? itemObj.price : '₹0';
-        
-        return { name, quantity, price };
-      }
-      return { name: '', quantity: 0, price: '₹0' };
-    });
+  try {
+    if (!items) return [];
+    return Array.isArray(items) ? items.map(item => ({
+      name: typeof item.name === 'string' ? item.name : '',
+      quantity: typeof item.quantity === 'number' ? item.quantity : 0,
+      price: typeof item.price === 'string' ? item.price : '₹0'
+    })) : [];
+  } catch (error) {
+    console.error("Error converting JSON to OrderItems:", error);
+    return [];
   }
-  
-  return [];
 }
 
-export async function sendOrderNotification(orderDetails: OrderDetails): Promise<{success: boolean, error?: any}> {
+/**
+ * Send Order Notification via Supabase Edge Function
+ */
+export async function sendOrderNotification(orderDetails: OrderDetails): Promise<{ success: boolean; error?: any }> {
   try {
-    // Call our Supabase Edge Function to send notifications
-    const response = await supabase.functions.invoke('send-order-notification', {
-      body: orderDetails
-    });
+    const { error } = await supabase.functions.invoke('send-order-notification', { body: orderDetails });
 
-    if (response.error) {
-      console.error("Error from notification function:", response.error);
-      return { success: false, error: response.error };
+    if (error) {
+      console.error("Error sending notification:", error);
+      return { success: false, error: error.message };
     }
 
-    console.log("Notification sent successfully:", response.data);
     return { success: true };
   } catch (error) {
     console.error("Exception when sending notification:", error);
-    return { success: false, error };
+    return { success: false, error: error.message };
   }
 }
 
-export async function generateOrderId(): Promise<string> {
-  // Generate a unique order ID based on timestamp and random string
+/**
+ * Generate a Unique Order ID
+ */
+export function generateOrderId(): string {
   const timestamp = new Date().getTime().toString().slice(-6);
   const randomString = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `SR-${timestamp}-${randomString}`;
 }
 
-export async function updateOrderStatus(orderId: string, status: string): Promise<{success: boolean, error?: any}> {
+/**
+ * Update Order Status (Admin Only)
+ */
+export async function updateOrderStatus(orderId: string, status: string): Promise<{ success: boolean; error?: any }> {
   try {
-    // Check if user is admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, error: "User not authenticated" };
-    }
-    
-    // Get the current user's role
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-      
-    if (profileError || profileData?.role !== 'admin') {
-      return { success: false, error: "Only admins can update order status" };
-    }
-    
-    // Update the order status
-    const { data, error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('order_id', orderId)
-      .select();
-      
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) return { success: false, error: "User not authenticated" };
+
+    const { data: profileData, error: profileError } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
+    if (profileError || profileData?.role !== 'admin') return { success: false, error: "Only admins can update order status" };
+
+    const { error } = await supabase.from('orders').update({ status }).eq('order_id', orderId);
     if (error) {
       console.error("Error updating order status:", error);
-      return { success: false, error };
+      return { success: false, error: error.message };
     }
-    
-    console.log("Order status updated:", data);
+
     return { success: true };
   } catch (error) {
     console.error("Exception when updating order status:", error);
-    return { success: false, error };
+    return { success: false, error: error.message };
   }
 }
 
-export async function fetchUserOrders(): Promise<{success: boolean, data?: any[], error?: any}> {
+/**
+ * Fetch Orders for Logged-in User
+ */
+export async function fetchUserOrders(): Promise<{ success: boolean; data?: any[]; error?: any }> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return { success: false, error: "User not authenticated" };
-    }
-    
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error("Error fetching user orders:", error);
-      return { success: false, error };
-    }
-    
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) return { success: false, error: "User not authenticated" };
+
+    const { data, error } = await supabase.from('orders').select('*').eq('user_id', authData.user.id).order('created_at', { ascending: false });
+    if (error) return { success: false, error: error.message };
+
     return { success: true, data };
   } catch (error) {
     console.error("Exception when fetching user orders:", error);
-    return { success: false, error };
+    return { success: false, error: error.message };
   }
 }
 
+/**
+ * Fetch All Orders (Admin Only)
+ */
 export async function fetchAllOrders(): Promise<{ success: boolean; data?: any[]; error?: string }> {
   try {
-    // Check if user is authenticated
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return { success: false, error: "User not authenticated" };
-    }
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) return { success: false, error: "User not authenticated" };
 
-    // Get user role from profiles table
-    // Avoid excessive type instantiation by simplifying our approach
-    const { data, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const { data: profileData, error: profileError } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
+    if (profileError || !profileData) return { success: false, error: "Could not verify user role" };
 
-    if (profileError || !data) {
-      console.error("Error fetching profile:", profileError);
-      return { success: false, error: "Could not verify user role" };
-    }
+    if (profileData.role !== 'admin') return { success: false, error: "Only admins can view all orders" };
 
-    // Use simple string comparison
-    const role = data.role as string;
-    if (role !== 'admin') {
-      return { success: false, error: "Only admins can view all orders" };
-    }
-
-    // Fetch all orders for admin
-    const { data: orders, error: orderError } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data: orders, error: orderError } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
 
     if (orderError) {
       console.error("Error fetching all orders:", orderError);
-      return { success: false, error: "Failed to fetch orders" };
+      return { success: false, error: orderError.message };
     }
 
     return { success: true, data: orders };
