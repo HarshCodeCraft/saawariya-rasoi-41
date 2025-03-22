@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -109,7 +110,7 @@ const Admin = () => {
       
       const token = sessionData.session.access_token;
       
-      const response = await fetch('https://mdvmzijhtelwfmpsbnyh.functions.supabase.co/list-users', {
+      const response = await fetch('https://xwdtqctvqypjtnkwgwxz.functions.supabase.co/list-users', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
