@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Json } from '@/integrations/supabase/types';
@@ -43,11 +42,11 @@ export async function saveOrderToSupabase(orderDetails: OrderDetails): Promise<{
       customer_phone: orderDetails.customerPhone,
       pickup_location: orderDetails.pickupLocation,
       pickup_datetime: orderDetails.pickupDateTime,
-      items: JSON.stringify(orderDetails.items), // Ensure proper JSON storage
+      items: JSON.stringify(orderDetails.items),
       total_amount: orderDetails.totalAmount,
       payment_status: orderDetails.paymentStatus,
       special_instructions: orderDetails.specialInstructions || null,
-      status: 'pending', // Default status
+      status: 'pending',
       created_at: new Date().toISOString(),
     };
 
@@ -74,7 +73,6 @@ export function convertJsonToOrderItems(items: Json): OrderItem[] {
     
     if (Array.isArray(items)) {
       return items.map(item => {
-        // Type assertion to safely access properties
         const itemObj = item as Record<string, any>;
         return {
           name: typeof itemObj.name === 'string' ? itemObj.name : '',
@@ -166,19 +164,22 @@ export async function fetchUserOrders(): Promise<{ success: boolean; data?: any[
 export async function fetchAllOrders(): Promise<{ success: boolean; data?: any[]; error?: string }> {
   try {
     const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData?.user) return { success: false, error: "User not authenticated" };
+    if (authError || !authData?.user) {
+      return { success: false, error: "User not authenticated" };
+    }
 
-    // Explicitly fetch profile data without using .single() with a type parameter
-    const { data: profileData, error: profileError } = await supabase
+    const profileQuery = await supabase
       .from('profiles')
       .select('role')
       .eq('id', authData.user.id)
       .maybeSingle();
       
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
+    if (profileQuery.error) {
+      console.error("Error fetching profile:", profileQuery.error);
       return { success: false, error: "Could not verify user role" };
     }
+    
+    const profileData = profileQuery.data;
     
     if (!profileData) {
       return { success: false, error: "User profile not found" };
@@ -188,17 +189,20 @@ export async function fetchAllOrders(): Promise<{ success: boolean; data?: any[]
       return { success: false, error: "Only admins can view all orders" };
     }
 
-    const { data: orders, error: orderError } = await supabase
+    const ordersQuery = await supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (orderError) {
-      console.error("Error fetching all orders:", orderError);
-      return { success: false, error: orderError.message };
+    if (ordersQuery.error) {
+      console.error("Error fetching all orders:", ordersQuery.error);
+      return { success: false, error: ordersQuery.error.message };
     }
 
-    return { success: true, data: orders };
+    return { 
+      success: true, 
+      data: ordersQuery.data 
+    };
   } catch (error) {
     console.error("Exception when fetching all orders:", error);
     return { success: false, error: "Unexpected error occurred" };
