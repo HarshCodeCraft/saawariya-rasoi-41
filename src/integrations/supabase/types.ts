@@ -9,69 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      orders: {
+      menu: {
         Row: {
-          created_at: string
-          customer_email: string
-          customer_name: string
-          customer_phone: string
-          id: string
-          items: Json
-          order_id: string
-          payment_status: string
-          pickup_datetime: string
-          pickup_location: string
-          special_instructions: string | null
-          status: string
-          total_amount: string
+          id: number
+          item_name: string | null
+          price: number | null
         }
         Insert: {
-          created_at?: string
-          customer_email: string
-          customer_name: string
-          customer_phone: string
-          id?: string
-          items: Json
-          order_id: string
-          payment_status: string
-          pickup_datetime: string
-          pickup_location: string
-          special_instructions?: string | null
-          status?: string
-          total_amount: string
+          id?: number
+          item_name?: string | null
+          price?: number | null
         }
         Update: {
-          created_at?: string
-          customer_email?: string
-          customer_name?: string
-          customer_phone?: string
-          id?: string
-          items?: Json
-          order_id?: string
-          payment_status?: string
-          pickup_datetime?: string
-          pickup_location?: string
-          special_instructions?: string | null
-          status?: string
-          total_amount?: string
+          id?: number
+          item_name?: string | null
+          price?: number | null
         }
         Relationships: []
       }
-      profiles: {
+      users: {
         Row: {
-          created_at: string | null
+          created_at: string
+          email: string | null
           id: string
-          role: string
+          name: string | null
         }
         Insert: {
-          created_at?: string | null
-          id: string
-          role?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
+          email?: string | null
           id?: string
-          role?: string
+          name?: string | null
         }
         Relationships: []
       }
