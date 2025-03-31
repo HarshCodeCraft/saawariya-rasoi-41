@@ -62,10 +62,6 @@ serve(async (req) => {
       }
     };
     
-    // For actual implementation:
-    // 1. Use SendGrid, Resend, or other email service to send emails
-    // 2. Use Twilio API for WhatsApp messaging
-    
     return new Response(
       JSON.stringify(notificationLogs),
       { 
